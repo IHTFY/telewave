@@ -132,10 +132,12 @@ table.word {
   border-collapse: collapse;
   border-radius: 20px;
   box-shadow: 10px 10px 25px #000000;
-  width: 48vw;
-  height: 27vw;
-  max-height: 480px;
+  width: 32vw;
+  height: 18vw;
   max-width: 270px;
+  max-height: 480px;
+  min-height: 180px;
+  min-width: 320px;
   text-align: center;
   table-layout: fixed;
   overflow: hidden;
