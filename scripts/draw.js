@@ -17,20 +17,44 @@ function position(x) {
 function draw(x) {
 	posx = position(x)
 	ctx.beginPath();
-	ctx.fillStyle = "#d3961f";
+	ctx.fillStyle = "#f9c508";
 	ctx.fillRect(posx - recW3 / 2, 0, recW3, 150);
 	ctx.stroke();
 
 	ctx.beginPath();
-	ctx.fillStyle = "#a4cea3";
+	ctx.fillStyle = "#ff7c34";
 	ctx.fillRect(posx - recW2 / 2, 0, recW2, 150);
 	ctx.stroke();
 
 	ctx.beginPath();
-	ctx.fillStyle = "#dd5d3e";
+	ctx.fillStyle = "#b6d4ed";
 	ctx.fillRect(posx - recW / 2, 0, recW, 150);
 	ctx.stroke();
 
+	ctx.font = "24px sans-serif";
+	ctx.fillStyle = "#000000";
+	ctx.textAlign = "center";
+	ctx.fillText('4', posx, 24);
+
+	ctx.font = "24px sans-serif";
+	ctx.fillStyle = "#000000";
+	ctx.textAlign = "center";
+	ctx.fillText('3', posx + 45, 24);
+
+	ctx.font = "24px sans-serif";
+	ctx.fillStyle = "#000000";
+	ctx.textAlign = "center";
+	ctx.fillText('3', posx - 45, 24);
+
+	ctx.font = "24px sans-serif";
+	ctx.fillStyle = "#000000";
+	ctx.textAlign = "center";
+	ctx.fillText('2', posx + 90, 24);
+
+	ctx.font = "24px sans-serif";
+	ctx.fillStyle = "#000000";
+	ctx.textAlign = "center";
+	ctx.fillText('2', posx - 90, 24);
 }
 
 function drawguess() {
@@ -40,7 +64,7 @@ function drawguess() {
 	var guess = document.getElementById("guesser").value
 	ctx.beginPath();
 	ctx.fillStyle = "#d42838";
-	ctx.fillRect(position(guess) - 2, 0, 4, 150);
+	ctx.fillRect(position(guess) - 2, 30, 4, 120);
 	ctx.stroke();
 
 	score(randpos, guess)

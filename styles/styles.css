@@ -132,8 +132,7 @@ table.word {
   text-align: center;
   table-layout: fixed;
   overflow: hidden;
-  font-size: 20px;
-  font-weight: lighter;
+  font-size: 24px;
 }
 table.word tbody {
   vertical-align: top;
