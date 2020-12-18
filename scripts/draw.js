@@ -73,20 +73,17 @@ function between(x, min, max) {
 
 function button_peek() {
 	draw(randpos);
-	gtag('event', 'peek');
 }
 
 
 function button_guess() {
 	drawguess();
-	gtag('event', 'guess');
 }
 
 function update_seed() {
 	Math.seedrandom();
 	$("#seed").val(Math.floor(Math.random() * 10000));
 	fire();
-	gtag('event', 'new_clue');
 }
 
 
@@ -98,10 +95,8 @@ function update_percentages() {
 	} else {
 		text.style.display = "none";
 	}
-	gtag('event', 'display_percentage');
 }
 
 function button_clear() {
 	clearboard();
-	gtag('event', 'clear_board');
 }

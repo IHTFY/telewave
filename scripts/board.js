@@ -41,8 +41,6 @@ function fire() {
 		document.getElementById("score").innerHTML = ""
 
 		document.getElementById("board").innerHTML = '<center><table class="word"><tbody><tr><td> &#10229 <br />' + words[0] + '</td><td> &#10230 <br />' + words[1] + '</td></tr></tbody></table></center>'
-
-		gtag('event', 'fire');
 }
 
 //enable pressing 'Enter' on seed field
@@ -60,7 +58,6 @@ function copySeedUrl(){
 		var seed = document.getElementById("seed").value;
 		const seedUrl = `${window.location.origin}${window.location.pathname}?seed=${seed}`;
 		copyStringToClipboard(seedUrl);
-		gtag('event', 'copy_seed');
 }
 
 function copyStringToClipboard (str) {
