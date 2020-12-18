@@ -72,15 +72,9 @@ function score(randpos, guess) {
 	document.getElementById("score").textContent = points + " points" + ("!".repeat(Math.max(points - 1, 0)));
 }
 
-
-function between(x, min, max) {
-	return x >= min && x <= max;
-}
-
 function button_peek() {
 	draw(randpos);
 }
-
 
 function button_guess() {
 	drawguess();
