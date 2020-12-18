@@ -35,25 +35,9 @@ function draw(x) {
 	ctx.fillStyle = "#000000";
 	ctx.textAlign = "center";
 	ctx.fillText('4', posx, 24);
-
-	ctx.font = "24px sans-serif";
-	ctx.fillStyle = "#000000";
-	ctx.textAlign = "center";
 	ctx.fillText('3', posx + 45, 24);
-
-	ctx.font = "24px sans-serif";
-	ctx.fillStyle = "#000000";
-	ctx.textAlign = "center";
 	ctx.fillText('3', posx - 45, 24);
-
-	ctx.font = "24px sans-serif";
-	ctx.fillStyle = "#000000";
-	ctx.textAlign = "center";
 	ctx.fillText('2', posx + 90, 24);
-
-	ctx.font = "24px sans-serif";
-	ctx.fillStyle = "#000000";
-	ctx.textAlign = "center";
 	ctx.fillText('2', posx - 90, 24);
 }
 
