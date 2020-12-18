@@ -25,6 +25,12 @@ span.label {
   font-size: 1rem;
 }
 
+#wave {
+  width: 1000px;
+  height: 150px;
+  margin: 0 auto;
+}
+
 input[type="text"] {
   padding: 0.5rem;
   border-radius: 2px;
@@ -77,7 +83,8 @@ a {
 }
 
 .slidecontainer {
-  width: 100%; /* Width of the outside container */
+  width: 1000px; /* Width of the outside container */
+  margin: 0 auto;
   text-align: center;
 }
 
