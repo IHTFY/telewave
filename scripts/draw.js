@@ -51,19 +51,17 @@ function drawguess() {
 var points = 0
 
 function score(randpos, guess) {
-	if (between(guess, randpos - binW / 2, randpos + binW / 2)) {
-		document.getElementById("score").innerHTML = '<div class="score">4 points!!!</div>';
+	let dist = Math.abs(randpos - guess) / binW;
+	if (dist <= 0.5) {
 		points = 4;
-	} else if (between(guess, randpos - 3 * binW / 2, randpos + 3 * binW / 2)) {
-		document.getElementById("score").innerHTML = '<div class="score">3 points!!</div>';
+	} else if (dist <= 1.5) {
 		points = 3;
-	} else if (between(guess, randpos - 5 * binW / 2, randpos + 5 * binW / 2)) {
-		document.getElementById("score").innerHTML = '<div class="score">2 points!</div>';
+	} else if (dist <= 2.5) {
 		points = 2;
 	} else {
-		document.getElementById("score").innerHTML = '<div class="score">0 points</div>';
 		points = 0;
 	}
+	document.getElementById("score").textContent = points + " points" + ("!".repeat(Math.max(points - 1, 0)));
 }
 
 
