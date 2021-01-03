@@ -74,6 +74,8 @@ function score(randpos, guess) {
 
 function button_peek() {
 	draw(randpos);
+	document.getElementById("guesser").value = randpos;
+	document.getElementById("guessdisp").value = Math.floor(randpos / 10);
 }
 
 function button_guess() {
@@ -99,4 +101,6 @@ function update_percentages() {
 
 function button_clear() {
 	clearboard();
+	document.getElementById("guesser").value = 500;
+	document.getElementById("guessdisp").value = 50;
 }
