@@ -20,7 +20,7 @@
 					<input type="text" id="seed" placeholder="seed" size="8" autofocus>
 					<input type="image" onclick="copySeedUrl()" src="img/clipboard-copy-512.png" alt="Copy link with seed" width=24px height=24px>
 				</div>
-				<button id="new" onclick="update_seed()">New clue</button>
+				<button id="new" onclick="update_seed()">New Card</button>
 				<button id="commit" onclick="button_guess()">Guess</button>
 				<button id="reveal" onclick="button_peek()">Peek</button>
 				<button id="reset" onclick="button_clear()">Clear</button>
@@ -65,7 +65,8 @@
 			<div class="divTable scoreboard">
 				<div class="divTableBody">
 					<div class="divTableRow">
-						<div class="divTableCell">Team 1
+						<div class="divTableCell">
+							<div contenteditable="true">Team 1</div>
 							<div>
 								<button type="button" onclick="this.parentNode.querySelector('[type=number]').stepDown();">
 									-
@@ -80,7 +81,8 @@
 
 						</div>
 
-						<div class="divTableCell">Team 2
+						<div class="divTableCell">
+							<div contenteditable="true"> Team 2</div>
 							<div>
 								<button type="button" onclick="this.parentNode.querySelector('[type=number]').stepDown();">
 									-
