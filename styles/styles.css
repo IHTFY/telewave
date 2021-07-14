@@ -134,14 +134,12 @@ table.word {
   box-shadow: 10px 10px 25px #000000;
   width: 32vw;
   height: 18vw;
-  max-width: 270px;
-  max-height: 480px;
-  min-height: 180px;
-  min-width: 320px;
+  min-height: 270px;
+  min-width: 430px;
   text-align: center;
   table-layout: fixed;
   overflow: hidden;
-  font-size: 24px;
+  font-size: 36px;
 }
 table.word tbody {
   vertical-align: top;
