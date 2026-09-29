@@ -1,231 +1,195 @@
-* {
-  box-sizing: border-box;
+/* Telewave: speckled night-sky table, blue plastic tray as the board,
+   score track | dial + card | score track. */
+:root {
+  --sky: #111b35;
+  --tray: #1f6fc4;
+  --tray-hi: #3a8ce0;
+  --tray-lo: #15539a;
+  --navy: #1b2a4e;
+  --face: #ece8dc;
+  --shade: #d9d3c3;
+  --shade-edge: #bfb7a3;
+  --tick: #b9b09c;
+  --scallop: #efe6da;
+  --red: #c8262f;
+  --red-lo: #a41d25;
+  --mint: #7fd6c2;
+  --team0: #e07a5f;
+  --team1: #d9a531;
+  --gem: #e8657c;
+  --ink: #16203a;
+  --paper: #fbfaf6;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Karla", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
 }
 
-html,
+* { box-sizing: border-box; }
+
 body {
-  height: 100vh;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  padding: 2rem;
   margin: 0;
-  font-size: 1.5rem;
-  color: #000000;
-  display: flex;
-  flex-direction: column;
+  padding-inline: 16px;
+  padding-block: 16px 32px;
+  font-family: var(--body);
+  color: var(--paper);
+  background-color: var(--sky);
+  background-image: var(--speckle, none);
+  background-size: 220px;
+  min-height: 100vh;
 }
 
-button,
-select,
-span.label {
-  outline: 0;
-  border: 0;
-  font-size: 1rem;
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 16px; }
+
+a { color: var(--paper); font-weight: 700; text-decoration: none; }
+a:hover { color: var(--mint); }
+
+button { font-family: inherit; }
+button:focus-visible, input:focus-visible, a:focus-visible, .dial:focus-visible {
+  outline: 3px solid var(--mint);
+  outline-offset: 2px;
 }
 
-#wave {
-  width: 1000px;
-  height: 150px;
-  margin: 0 auto;
+/* ---------- header ---------- */
+#header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+#header h1 { font: 600 1.6rem var(--display); margin: 0 auto 0 0; letter-spacing: .02em; }
+.seed-container { display: flex; align-items: center; gap: 8px; }
+.label, .toggle span { font-weight: 700; font-size: .95rem; }
+#seed {
+  font: 700 1rem var(--body); width: 9ch; padding: 8px 10px; border-radius: 8px;
+  border: 2px solid var(--tray-lo); background: var(--paper); color: var(--ink);
+}
+.icon-btn {
+  display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 8px;
+  background: rgba(255, 255, 255, .14); color: var(--paper); cursor: pointer;
+}
+.icon-btn:hover { background: rgba(255, 255, 255, .26); }
+.icon-btn.copied { background: var(--mint); color: var(--ink); }
+.toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--mint); }
+.link-btn { background: none; border: 0; padding: 0; color: var(--paper); font: 700 1rem var(--body); cursor: pointer; }
+.link-btn:hover { color: var(--mint); }
+
+/* ---------- board ---------- */
+.board {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 76px;
+  gap: 14px;
+  align-items: start;
+  padding: 18px;
+  border-radius: 22px;
+  background: var(--tray);
+  box-shadow: inset 0 3px 0 var(--tray-hi), inset 0 -6px 0 var(--tray-lo), 0 18px 40px rgba(0, 0, 0, .45);
+}
+.center { display: grid; gap: 14px; justify-items: center; min-width: 0; }
+
+/* turn indicator */
+.turn {
+  display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px 8px 12px;
+  border: 0; border-radius: 999px; cursor: pointer;
+  font: 600 1.1rem var(--display); color: var(--ink); background: var(--team0);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .25);
+  transition: background-color .3s;
+}
+.turn[data-team="1"] { background: var(--team1); }
+.turn-dot {
+  width: 12px; height: 12px; border-radius: 50%; background: var(--paper);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .35);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(255, 255, 255, 0); } }
+
+/* dial */
+svg.dial { width: 100%; max-width: 720px; height: auto; display: block; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; border-radius: 12px; }
+svg.dial.locked { cursor: default; }
+.navy { fill: var(--navy); }
+.face { fill: var(--face); }
+.shade { fill: var(--shade); stroke: var(--shade-edge); stroke-width: 2; }
+.mint { fill: var(--mint); }
+.needle-line { stroke: var(--red); stroke-width: 12; stroke-linecap: round; }
+.hub { fill: var(--red); }
+.hub-ring { fill: var(--red-lo); }
+#handle { cursor: grab; }
+
+/* card */
+.cardrow { display: grid; grid-template-columns: 56px auto 56px; align-items: center; gap: 10px; }
+.card {
+  display: grid; grid-template-columns: 1fr 1fr; width: min(380px, 62vw); aspect-ratio: 7 / 4;
+  border-radius: 12px; overflow: hidden; box-shadow: 0 8px 18px rgba(0, 0, 0, .3); color: var(--ink);
+}
+.card .side { display: grid; grid-template-rows: auto 1fr; gap: 6px; padding: 12px 14px; text-align: center; min-width: 0; }
+.card .arrow { font-size: 1.4rem; line-height: 1; }
+.card .word { font: 700 clamp(.95rem, 2.6vw, 1.4rem)/1.2 var(--body); align-self: center; overflow-wrap: anywhere; text-wrap: balance; }
+.gemslot {
+  height: 72px; padding: 0; border-radius: 10px; border: 2px dashed rgba(255, 255, 255, .35); background: transparent;
+  display: grid; place-items: center; cursor: pointer;
+}
+.gemslot:hover { border-color: rgba(255, 255, 255, .7); }
+.gemslot svg { width: 30px; height: 52px; opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .25s; }
+.gemslot[aria-pressed="true"] { border-color: transparent; }
+.gemslot[aria-pressed="true"] svg { opacity: 1; transform: none; }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.ctl {
+  font: 600 1.05rem var(--display); letter-spacing: .02em; border: 0; border-radius: 12px; padding: 12px 18px;
+  cursor: pointer; background: var(--paper); color: var(--ink); box-shadow: 0 4px 0 rgba(0, 0, 0, .25);
+  transition: transform .08s, box-shadow .08s;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.ctl:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, .25); }
+.ctl.primary { background: var(--red); color: var(--paper); }
+.ctl.peek { background: var(--mint); }
+.ctl:disabled { opacity: .5; cursor: default; }
+.status { min-height: 1.5em; font: 600 1.2rem var(--display); text-align: center; text-wrap: balance; }
+.readout { font: 700 .95rem var(--body); opacity: .85; font-variant-numeric: tabular-nums; }
+
+/* score tracks: 11 slots of 30px + 4px gap inside 8px padding */
+.track { display: grid; gap: 6px; justify-items: center; padding: 6px 4px; border-radius: 16px; transition: background-color .3s, box-shadow .3s; }
+.track.active { background: rgba(255, 255, 255, .12); box-shadow: 0 0 0 2px var(--team-color); }
+.team-name {
+  width: 100%; padding: 2px; border: 0; border-radius: 6px; background: none; color: var(--paper);
+  font: 600 .85rem var(--display); text-align: center; text-overflow: ellipsis;
+}
+.rail {
+  position: relative; width: 56px; padding: 8px 0; display: grid; gap: 4px; border-radius: 14px;
+  background: var(--tray-lo); box-shadow: inset 0 3px 6px rgba(0, 0, 0, .35);
+}
+.slot {
+  height: 30px; padding: 0; border: 0; background: none; cursor: pointer;
+  display: grid; grid-template-columns: 18px 1fr; align-items: center;
+  color: rgba(255, 255, 255, .6); font: 700 .72rem var(--body); font-variant-numeric: tabular-nums;
+}
+.slot::after {
+  content: ""; justify-self: center; width: 22px; height: 7px; border-radius: 4px;
+  background: rgba(0, 0, 0, .45); box-shadow: 0 1px 0 rgba(255, 255, 255, .18);
+}
+.head {
+  position: absolute; left: 50%; width: 34px; height: 42px; margin-left: -8px; pointer-events: none;
+  top: calc(8px + (10 - var(--n, 0)) * 34px - 8px);
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .4));
+  transition: top .35s cubic-bezier(.3, 1.4, .5, 1);
+}
+.bump { display: flex; gap: 4px; }
+.bump button {
+  width: 26px; height: 26px; padding: 0; border: 0; border-radius: 6px; cursor: pointer;
+  background: rgba(255, 255, 255, .85); color: var(--ink); font: 700 1rem var(--body);
 }
 
-input[type="text"] {
-  padding: 0.5rem;
-  border-radius: 2px;
-  outline: 0;
-  border: 3px #eecbcb solid;
-  font-style: bold;
+.stripes {
+  height: 14px; border-radius: 4px;
+  background: linear-gradient(90deg, #8cc26b 0 7%, #e9866a 7% 14%, #1d1d1d 14% 17%, #f2d0d6 17% 25%, #5bb9a4 25% 31%, #f2a33a 31% 36%, #b8d7ef 36% 44%, #d85a36 44% 50%, #f1e7c8 50% 58%, #2d2d2d 58% 61%, #9fd08a 61% 69%, #e9866a 69% 76%, #f2d0d6 76% 83%, #5bb9a4 83% 90%, #f2a33a 90%);
 }
 
-select {
-  border: 1px #dddddd solid;
-  margin: 0 1rem;
+@media (max-width: 640px) {
+  #header h1 { flex-basis: 100%; }
+  .board { grid-template-columns: 1fr 1fr; padding: 12px; }
+  .center { grid-column: 1 / -1; order: -1; }
+  .cardrow { grid-template-columns: 36px auto 36px; gap: 6px; }
+  .card { width: calc(100vw - 150px); }
+  .gemslot svg { width: 22px; height: 40px; }
 }
 
-button {
-  background: #dddddd;
-  transition: background 0.2s ease;
-  border-radius: 2px;
-  font-size: 2rem;
-  padding: 0.5rem 1rem;
-}
-
-button:hover {
-  background: #69f0ae;
-  cursor: pointer;
-}
-
-input {
-  font-size: 1rem;
-}
-
-input:focus {
-  outline: 0;
-}
-
-a {
-  text-decoration: none;
-  color: #444444;
-}
-
-#header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2rem;
-  justify-content: space-between;
-}
-
-#header a {
-  font-weight: bold;
-  font-size: 1.3rem;
-}
-
-.slidecontainer {
-  width: 1000px; /* Width of the outside container */
-  margin: 0 auto;
-  text-align: center;
-}
-
-/* The slider itself */
-.slider {
-  -webkit-appearance: none; /* Override default CSS styles */
-  appearance: none;
-  width: 100%; /* Full-width */
-  height: 50px; /* Specified height */
-  background: #d3d3d3; /* Grey background */
-  outline: none; /* Remove outline */
-  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
-  -webkit-transition: 0.2s; /* 0.2 seconds transition on hover */
-  transition: opacity 0.2s;
-}
-
-/* Mouse-over effects */
-.slider:hover {
-  opacity: 1; /* Fully shown on mouse-over */
-}
-
-/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none; /* Override default look */
-  appearance: none;
-  width: 10px; /* Set a specific slider handle width */
-  height: 50px; /* Slider handle height */
-  background: #d42838; /* Green background */
-  cursor: pointer; /* Cursor on hover */
-}
-
-.slider::-moz-range-thumb {
-  width: 10x; /* Set a specific slider handle width */
-  height: 50px; /* Slider handle height */
-  background: #d42838; /* Green background */
-  cursor: pointer; /* Cursor on hover */
-}
-
-#board {
-  width: 100%;
-}
-
-table.word {
-  background-color: #cbfdb8;
-  border-collapse: collapse;
-  border-radius: 20px;
-  box-shadow: 10px 10px 25px #000000;
-  width: 32vw;
-  height: 18vw;
-  min-height: 270px;
-  min-width: 430px;
-  text-align: center;
-  table-layout: fixed;
-  overflow: hidden;
-  font-size: 36px;
-}
-table.word tbody {
-  vertical-align: top;
-}
-table.word th,
-td {
-  padding: 1em;
-}
-table.word td {
-  width: 100px;
-  line-height: 1.5em;
-}
-table.word th:nth-child(even),
-table.word td:nth-child(even) {
-  background: #f5e1b4;
-}
-
-#score {
-  width: 100%;
-  height: 100px;
-  text-align: center;
-  padding: 40px 0;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-input[type="number"] {
-  width: 50px;
-  text-align: center;
-  border-radius: 10px;
-  font-size: 32px;
-  font-style: bold;
-  -moz-appearance: textfield;
-  border: 1px #dddddd solid;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-div.scoreboard {
-  background-color: #eecbcb;
-	width: 500px;
-	margin: 0 auto;
-  text-align: center;
-  border-collapse: collapse;
-}
-.divTable.scoreboard .divTableCell,
-.divTable.scoreboard .divTableHead {
-  border: 4px solid #aaaaaa;
-  padding: 10px 2px;
-}
-.divTable.scoreboard .divTableBody .divTableCell {
-  font-size: 20px;
-  font-weight: bold;
-}
-.divTable.scoreboard .divTableCell:nth-child(even) {
-  background: #d0e4f5;
-}
-
-/* DivTable.com */
-.divTable {
-  display: table;
-}
-.divTableRow {
-  display: table-row;
-}
-.divTableHeading {
-  display: table-header-group;
-}
-.divTableCell,
-.divTableHead {
-  display: table-cell;
-}
-.divTableHeading {
-  display: table-header-group;
-}
-.divTableFoot {
-  display: table-footer-group;
-}
-.divTableBody {
-  display: table-row-group;
-}
-
-.seed-container input {
-  vertical-align: middle;
+@media (prefers-reduced-motion: reduce) {
+  .head, .gemslot svg, .turn, .track { transition: none; }
+  .turn-dot { animation: none; }
 }
