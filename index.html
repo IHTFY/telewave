@@ -3,11 +3,15 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 
 		<title>Telewave</title>
-		<meta name="description" content="Telewave">
+		<meta name="description" content="Telewave: an online take on the Wavelength party game">
 		<meta name="author" content="Frankie">
-		<link rel="stylesheet" href="styles/styles.css?v=1.0">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;600;700&display=swap">
+		<link rel="stylesheet" href="styles/styles.css?v=2.0">
 
 		<!-- Google Auto Ads -->
 		<script
@@ -18,101 +22,85 @@
 	</head>
 
 	<body>
-
-		<div>
-			<div id='header'>
+		<div class="wrap">
+			<header id="header">
+				<h1>Telewave</h1>
 				<div class="seed-container">
-					<span class="label">Seed</span>
-					<input type="text" id="seed" placeholder="seed" size="8" autofocus>
-					<input type="image" onclick="copySeedUrl()" src="img/clipboard-copy-512.png" alt="Copy link with seed" width=24px height=24px>
+					<label for="seed" class="label">Seed</label>
+					<input type="text" id="seed" placeholder="seed" size="8" autocomplete="off" spellcheck="false">
+					<button type="button" id="copySeed" class="icon-btn" aria-label="Copy link with this seed" title="Copy link with this seed">
+						<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 3h9a2 2 0 0 1 2 2v11h-2V5H9V3Zm-4 4h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Zm0 2v11h9V9H5Z" fill="currentColor"/></svg>
+					</button>
 				</div>
-				<button id="new" onclick="update_seed()">New Card</button>
-				<button id="commit" onclick="button_guess()">Guess</button>
-				<button id="reveal" onmousedown="button_peek()" ontouchstart="button_peek()" onmouseup="button_clear()" ontouchend="button_clear()">Peek</button>
-				<button id="reset" onclick="button_clear()">Clear</button>
-				<div class="percentages-container">
-						<span id="percentagesText" class="label">Percentage</span>
-						<input type="checkbox" id="percentages" checked onclick="update_percentages()">
-				</div>
+				<label class="toggle" for="percentages">
+					<input type="checkbox" id="percentages" checked>
+					<span>Percentage</span>
+				</label>
+				<button type="button" id="newGame" class="link-btn">New game</button>
 				<a href="instructions">Instructions</a>
-				<a href="lang/langs"><img src="lang/icons/translation.png" alt="Other languages" width=36px height=36px></a>
-			</div>
+			</header>
+
+			<section class="board" aria-label="Game board">
+				<div class="track" id="track0"></div>
+
+				<div class="center">
+					<button type="button" id="turn" class="turn" aria-live="polite" title="Click to switch turns">
+						<span class="turn-dot" aria-hidden="true"></span>
+						<span id="turnText">Team 1's turn</span>
+					</button>
+
+					<svg class="dial" id="dial" viewBox="0 0 760 420" role="slider" tabindex="0"
+						aria-label="Guess dial" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+						<defs>
+							<pattern id="speck" patternUnits="userSpaceOnUse" width="220" height="220">
+								<image id="speckImg" width="220" height="220"/>
+							</pattern>
+							<clipPath id="upper"><rect x="0" y="0" width="760" height="330"/></clipPath>
+							<clipPath id="faceClip"><path id="faceClipPath"/></clipPath>
+						</defs>
+						<g id="scallops"></g>
+						<path id="casing" class="navy"/>
+						<path id="casingSpeck" fill="url(#speck)"/>
+						<path id="face" class="face"/>
+						<g clip-path="url(#faceClip)"><g id="target"></g><g id="ticks"></g></g>
+						<g clip-path="url(#upper)"><path id="shade" class="shade"/></g>
+						<path id="panel" class="navy"/>
+						<path id="panelSpeck" fill="url(#speck)"/>
+						<rect id="stopL" class="mint" rx="7"/>
+						<g id="handle"><rect id="handleBar" class="mint" rx="9"/><rect id="handleHit" fill="transparent"/></g>
+						<g id="needle">
+							<line id="guessLine" class="needle-line"/>
+							<circle id="hubRing" class="hub-ring" r="46"/>
+							<circle id="hub" class="hub" r="34"/>
+						</g>
+					</svg>
+
+					<div class="cardrow">
+						<button type="button" class="gemslot" id="gemL" aria-pressed="false" aria-label="Other team bets the target is LEFT of the needle"></button>
+						<div class="card" id="card">
+							<div class="side" id="side1"><span class="arrow" aria-hidden="true">&#10229;</span><span class="word" id="word1"></span></div>
+							<div class="side" id="side2"><span class="arrow" aria-hidden="true">&#10230;</span><span class="word" id="word2"></span></div>
+						</div>
+						<button type="button" class="gemslot" id="gemR" aria-pressed="false" aria-label="Other team bets the target is RIGHT of the needle"></button>
+					</div>
+
+					<div class="controls">
+						<button type="button" class="ctl" id="new">New card</button>
+						<button type="button" class="ctl peek" id="reveal">Hold to peek</button>
+						<button type="button" class="ctl primary" id="commit">Guess</button>
+						<button type="button" class="ctl" id="reset">Clear</button>
+					</div>
+					<div class="status" id="score" aria-live="polite"></div>
+					<output class="readout" id="guessdisp" for="dial">50%</output>
+				</div>
+
+				<div class="track" id="track1"></div>
+			</section>
+			<div class="stripes" aria-hidden="true"></div>
 		</div>
-		<script src="scripts/jquery-3.4.1.min.js"></script>
+
 		<script src="scripts/seedrandom.js"></script>
 		<script src="scripts/data.js"></script>
-
-		<canvas id="wave" width="1000" height="150" style="border:5px solid #d3d3d3;">
-		</canvas>
-		<div class="slidecontainer">
-			<input type="range" min="0" max="1000" value="500" class="slider" id="guesser" oninput="guessdisp.value = Math.round(guesser.value/10)">
-			<output id="guessdisp">50</output>
-		</div>
-		<div id="board">
-			<center>
-				<table class="word">
-					<thead>
-						<tr>
-							<th>&#10229</th>
-							<th>&#10230</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr id="wordBoxes">
-							<td id="word1"></td>
-							<td id="word2"></td>
-						</tr>
-					</tbody>
-				</table>
-			</center>
-		</div>
-		<div id="score"></div>
-		<div id="scoreboard">
-			<div class="divTable scoreboard">
-				<div class="divTableBody">
-					<div class="divTableRow">
-						<div class="divTableCell">
-							<div contenteditable="true">Team 1</div>
-							<div>
-								<button type="button" onclick="this.parentNode.querySelector('[type=number]').stepDown();">
-									-
-								</button>
-
-								<input type="number" name="number" min="0" max="100" value="0">
-
-								<button type="button" onclick="this.parentNode.querySelector('[type=number]').stepUp();">
-									+
-								</button>
-							</div>
-
-						</div>
-
-						<div class="divTableCell">
-							<div contenteditable="true"> Team 2</div>
-							<div>
-								<button type="button" onclick="this.parentNode.querySelector('[type=number]').stepDown();">
-									-
-								</button>
-
-								<input type="number" name="number" min="0" max="100" value="0">
-
-								<button type="button" onclick="this.parentNode.querySelector('[type=number]').stepUp();">
-									+
-								</button>
-							</div>
-
-						</div>
-
-					</div>
-				</div>
-			</div>
-
-
-		</div>
-
 		<script src="scripts/board.js"></script>
-		<script src="scripts/draw.js"></script>
-		</div>
-
 	</body>
 </html>
