@@ -282,3 +282,14 @@ svg.dial.locked { cursor: default; }
   .popup.applied { animation: none; }
   .turn-dot { animation: none; }
 }
+
+/* ---------- update banner (service worker) ---------- */
+.update {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px 10px 16px; border-radius: 12px;
+  background: var(--navy); color: var(--paper);
+  border: 1px solid rgba(255, 255, 255, .2); box-shadow: 0 6px 24px rgba(0, 0, 0, .45);
+  font-family: var(--body); z-index: 50;
+}
+.update[hidden] { display: none; }
