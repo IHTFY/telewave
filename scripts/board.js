@@ -6,7 +6,7 @@
 	const STORE = 'telewave.v2';
 	const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { return {}; } };
 	const save = () => {
-		try { localStorage.setItem(STORE, JSON.stringify({ scores: game.scores, names: game.names, turn: game.turn, pct: $('percentages').checked })); } catch (e) { /* storage unavailable */ }
+		try { localStorage.setItem(STORE, JSON.stringify({ scores: game.scores, names: game.names, turn: game.turn, pct: $('percentages').checked, seed: game.seed, card: game.card })); } catch (e) { /* storage unavailable */ }
 	};
 
 	// ---------- geometry: one mapping shared by target, needle, ticks and pointer ----------
@@ -85,6 +85,7 @@
 		scores: Array.isArray(saved.scores) ? saved.scores.map(n => clamp(+n || 0, 0, 10)) : [0, 1], // team 2 starts at 1, as in the rules
 		names: Array.isArray(saved.names) ? saved.names.map(String) : ['Team 1', 'Team 2'],
 		turn: saved.turn === 1 ? 1 : 0,
+		seed: '', card: 1, // one seed per game shuffles the deck; card counts through it
 	};
 	const round = { target: 50, guess: 50, gem: null, revealed: false, scored: false, extraTurn: false };
 	let shade = 0, shadeGoal = 0; // degrees the cover is rotated open: 0 closed, 180 fully open
@@ -194,14 +195,47 @@
 		card.animate([{ transform: 'scale(.94)', filter: 'brightness(.85)' }, { transform: 'none', filter: 'none' }], { duration: 260, easing: 'ease-out' });
 	}
 
+	// ---------- seed: one shared word per game, cards dealt in a seeded shuffle ----------
+	const SEED_WORDS = ['apple', 'banjo', 'cactus', 'dragon', 'ember', 'falcon', 'gecko', 'harbor', 'igloo', 'jelly', 'koala', 'lemon',
+		'mango', 'nectar', 'otter', 'pepper', 'quartz', 'rocket', 'salsa', 'tiger', 'umbra', 'velvet', 'walrus', 'yeti', 'zebra',
+		'acorn', 'bagel', 'comet', 'daisy', 'eagle', 'fudge', 'ginger', 'hippo', 'island', 'jungle', 'kettle', 'llama', 'maple',
+		'noodle', 'orbit', 'panda', 'quilt', 'raven', 'sherpa', 'tulip', 'violet', 'waffle', 'yodel', 'zigzag', 'anchor', 'bison',
+		'cobalt', 'dune', 'echo', 'fern', 'glacier', 'honey', 'indigo', 'jasper', 'kiwi', 'lotus', 'meadow', 'nugget', 'opal',
+		'pickle', 'radish', 'saturn', 'tofu', 'walnut', 'pretzel', 'canyon', 'marble', 'pebble', 'puffin', 'sprout', 'tundra'];
+	const normSeed = v => String(v).trim().toLowerCase().replace(/\s+/g, ' ');
+	const randomSeed = () => SEED_WORDS[Math.floor(Math.random() * SEED_WORDS.length)];
+
+	// Card n of a seed: every card appears once per pass through the deck, then it reshuffles.
+	function deal(seed, n) {
+		const pass = Math.floor((n - 1) / data.length);
+		const order = data.map((_, i) => i);
+		const shuffle = new Math.seedrandom(`${seed}|deck|${pass}`);
+		for (let i = order.length - 1; i > 0; i--) {
+			const j = Math.floor(shuffle() * (i + 1));
+			[order[i], order[j]] = [order[j], order[i]];
+		}
+		return data[order[(n - 1) % data.length]];
+	}
+
+	function showSeed() {
+		$('seed').value = game.seed;
+		$('cardNo').value = game.card;
+	}
+
+	function flashSeed() {
+		const box = $('seedBox');
+		box.classList.remove('applied');
+		void box.offsetWidth; // restart the animation
+		box.classList.add('applied');
+	}
+
 	function startRound() {
 		throwCard();
 		// Pass the turn only once the previous card was actually scored (and no catch-up turn was earned).
 		if (round.scored && !round.extraTurn) game.turn = 1 - game.turn;
-		const seed = $('seed').value.toLowerCase();
-		const rng = new Math.seedrandom(seed);
+		const rng = new Math.seedrandom(`${game.seed}|${game.card}`);
 		round.target = BAND / 2 + rng() * (100 - BAND); // keep the 4-point band fully on the dial
-		const words = data[Math.floor(rng() * data.length)];
+		const words = deal(game.seed, game.card);
 		const c0 = Math.floor(rng() * CARD_COLORS.length);
 		const apart = CARD_COLORS.filter(c => colorDist(c, CARD_COLORS[c0]) >= MIN_DIST);
 		const right = apart[Math.floor(rng() * apart.length)];
@@ -210,6 +244,7 @@
 		$('side1').style.background = CARD_COLORS[c0];
 		$('side2').style.background = right;
 		Object.assign(round, { scored: false, extraTurn: false });
+		showSeed();
 		drawTarget();
 		clearRound();
 		drawScores();
@@ -259,8 +294,8 @@
 		setStatus(msg);
 	}
 
-	function newSeed() {
-		$('seed').value = Math.floor(Math.random() * 10000);
+	function nextCard() {
+		game.card++;
 		startRound();
 	}
 
@@ -317,7 +352,7 @@
 	// ---------- buttons ----------
 	$('commit').addEventListener('click', guess);
 	$('reset').addEventListener('click', clearRound);
-	$('new').addEventListener('click', newSeed);
+	$('new').addEventListener('click', nextCard);
 	['L', 'R'].forEach(side => $('gem' + side).addEventListener('click', () => {
 		if (round.revealed) return;
 		round.gem = round.gem === side ? null : side;
@@ -328,19 +363,34 @@
 		game.scores = [0, 1];
 		game.turn = 0;
 		round.scored = false;
-		newSeed();
+		game.seed = randomSeed();
+		game.card = 1;
+		startRound();
+		flashSeed();
 	});
 
 	const pct = $('percentages');
 	const applyPct = () => { $('guessdisp').hidden = !pct.checked; save(); };
 	pct.addEventListener('change', applyPct);
 
-	let seedTimer = 0;
-	$('seed').addEventListener('input', () => { clearTimeout(seedTimer); seedTimer = setTimeout(startRound, 250); });
-	$('seed').addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(seedTimer); startRound(); } });
+	// Typed seeds and card numbers apply on Enter or when the box loses focus, never mid-typing.
+	const applySeed = from => {
+		const seed = normSeed($('seed').value) || randomSeed();
+		const card = Math.max(1, Math.floor(+$('cardNo').value) || 1);
+		const seedChanged = seed !== game.seed;
+		if (!seedChanged && card === game.card) return showSeed();
+		game.seed = seed;
+		game.card = seedChanged && from === 'seed' ? 1 : card; // a new seed starts its deck from the top
+		startRound();
+		flashSeed();
+	};
+	['seed', 'cardNo'].forEach(id => {
+		$(id).addEventListener('change', () => applySeed(id));
+		$(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $(id).blur(); } });
+	});
 
 	$('copySeed').addEventListener('click', () => {
-		const url = `${location.origin}${location.pathname}?seed=${encodeURIComponent($('seed').value)}`;
+		const url = `${location.origin}${location.pathname}?seed=${encodeURIComponent(game.seed)}&card=${game.card}`;
 		const btn = $('copySeed');
 		const done = () => { btn.classList.add('copied'); setTimeout(() => btn.classList.remove('copied'), 1200); };
 		const fallback = () => {
@@ -359,8 +409,10 @@
 
 	// ---------- boot ----------
 	const params = new URLSearchParams(location.search);
-	if (params.get('seed')) history.replaceState({}, '', location.pathname);
-	$('seed').value = params.get('seed') || Math.floor(Math.random() * 10000);
+	const linkSeed = normSeed(params.get('seed') || '');
+	if (params.has('seed')) history.replaceState({}, '', location.pathname);
+	game.seed = linkSeed || normSeed(saved.seed || '') || randomSeed();
+	game.card = Math.max(1, Math.floor(+(linkSeed ? params.get('card') : saved.card)) || 1);
 	if (saved.pct === false) pct.checked = false;
 	applyPct();
 	drawShade();
