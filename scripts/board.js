@@ -163,7 +163,15 @@
 	});
 
 	// ---------- rounds ----------
-	const CARD_COLORS = ['#5bb9a4', '#e9866a', '#9ec4e4', '#f2a33a', '#c5abc2', '#9fd08a', '#f2d0d6', '#e8c65a', '#81bed3', '#bcc7cd'];
+	const CARD_COLORS = ['#5bb9a4', '#e9866a', '#9ec4e4', '#f2a33a', '#c5abc2', '#9fd08a', '#f2d0d6', '#e8c65a', '#81bed3', '#e59ab5'];
+
+	// Redmean colour distance, so the two halves of a card never look alike.
+	const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+	const colorDist = (a, b) => {
+		const [r1, g1, b1] = hexRgb(a), [r2, g2, b2] = hexRgb(b), r = (r1 + r2) / 2;
+		return Math.sqrt((2 + r / 256) * (r1 - r2) ** 2 + 4 * (g1 - g2) ** 2 + (2 + (255 - r) / 256) * (b1 - b2) ** 2);
+	};
+	const MIN_DIST = 100;
 
 	function startRound() {
 		// Pass the turn only once the previous card was actually scored (and no catch-up turn was earned).
@@ -173,11 +181,12 @@
 		round.target = BAND / 2 + rng() * (100 - BAND); // keep the 4-point band fully on the dial
 		const words = data[Math.floor(rng() * data.length)];
 		const c0 = Math.floor(rng() * CARD_COLORS.length);
-		const c1 = (c0 + 1 + Math.floor(rng() * (CARD_COLORS.length - 1))) % CARD_COLORS.length;
+		const apart = CARD_COLORS.filter(c => colorDist(c, CARD_COLORS[c0]) >= MIN_DIST);
+		const right = apart[Math.floor(rng() * apart.length)];
 		$('word1').textContent = words[0];
 		$('word2').textContent = words[1];
 		$('side1').style.background = CARD_COLORS[c0];
-		$('side2').style.background = CARD_COLORS[c1];
+		$('side2').style.background = right;
 		Object.assign(round, { scored: false, extraTurn: false });
 		drawTarget();
 		clearRound();
