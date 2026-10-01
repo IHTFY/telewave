@@ -30,10 +30,10 @@
 						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4a8 8 0 1 1-7.75 10h2.07A6 6 0 1 0 12 6v3L7.5 5 12 1v3Z" fill="currentColor"/></svg>
 						<span class="menu-text">New game</span>
 					</button>
-					<a href="instructions" class="link-btn">
+					<button type="button" id="helpBtn" class="link-btn" aria-haspopup="dialog">
 						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm-1 11h2v2h-2v-2Zm1-8a3.5 3.5 0 0 1 1.7 6.56c-.47.27-.7.52-.7.94V14h-2v-.5c0-1.3.74-2 1.7-2.56A1.5 1.5 0 1 0 10.5 9.5h-2A3.5 3.5 0 0 1 12 7Z" fill="currentColor"/></svg>
 						<span class="menu-text">Instructions</span>
-					</a>
+					</button>
 					<div class="pop-wrap">
 						<button type="button" id="seedToggle" class="link-btn" aria-expanded="false" aria-controls="seedBox" title="Share the same cards across devices">
 							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41ZM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5Zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13Z" fill="currentColor"/></svg>
@@ -121,6 +121,47 @@
 			</section>
 			<div class="stripes" aria-hidden="true"></div>
 		</div>
+
+		<dialog class="help" id="help" aria-labelledby="helpTitle">
+			<div class="help-head">
+				<h2 id="helpTitle">How to play</h2>
+				<button type="button" class="icon-btn" id="helpClose" aria-label="Close instructions">
+					<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5Z" fill="currentColor"/></svg>
+				</button>
+			</div>
+			<div class="help-body">
+				<p>Each card has two opposite ideas. A hidden target sits somewhere between them. One player gives a clue, and their team tries to put the needle on the target.</p>
+
+				<h3>A turn</h3>
+				<ol>
+					<li>The clue giver holds <b>Hold to peek</b> to see the target. Everyone else looks away.</li>
+					<li>They say a clue that fits that spot on the card. For "Hot / Cold", a lukewarm bath is near the middle.</li>
+					<li>The team talks it over, then drags the needle to their guess. The arrow keys work too.</li>
+					<li>Press <b>Guess</b> to open the shade and score the turn.</li>
+				</ol>
+
+				<h3>Scoring</h3>
+				<ul>
+					<li>The centre band scores 4 points, the next band out 3, the outer band 2, and a miss 0.</li>
+					<li>The other team can bet on a side. Before the guess, they drop the pink token on the left or right of the card. If the target is on that side of the needle, they score 1 point. A bullseye cancels the bet.</li>
+					<li>A team that scores 4 but is still behind goes again.</li>
+					<li>Team 2 starts on 1 point. The first team to 10 wins, and a tie goes to sudden death.</li>
+				</ul>
+
+				<h3>Buttons</h3>
+				<ul>
+					<li><b>New card</b> deals the next card. If the last card was scored, the turn passes.</li>
+					<li><b>Clear</b> resets the needle and bet. A card scores only once.</li>
+					<li>The <b>%</b> switch shows the needle position as a number, which helps on a video call.</li>
+					<li>Click a score slot or use the -/+ buttons to fix a score. Click the turn badge to switch teams, or a team name to rename it.</li>
+				</ul>
+
+				<h3>Playing on two devices</h3>
+				<p>Open <b>Shuffle</b> and enter the same word and card number on each device. Both show the same card and target, so the clue giver can peek on their own phone. Then everyone presses New card together.</p>
+
+				<p class="help-foot"><a href="https://youtu.be/KuL_R60_320?t=225" target="_blank" rel="noopener">Watch a video of the original game</a></p>
+			</div>
+		</dialog>
 
 		<script src="scripts/seedrandom.js"></script>
 		<script src="scripts/data.js"></script>
