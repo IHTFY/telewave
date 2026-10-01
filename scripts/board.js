@@ -417,6 +417,12 @@
 		if (e.key === 'Escape' && !$('seedBox').hidden) { showSeedBox(false); $('seedToggle').focus(); }
 	});
 
+	// ---------- instructions ----------
+	const help = $('help');
+	$('helpBtn').addEventListener('click', () => help.showModal());
+	$('helpClose').addEventListener('click', () => help.close());
+	help.addEventListener('click', e => { if (e.target === help) help.close(); }); // click on the backdrop
+
 	// ---------- boot ----------
 	const params = new URLSearchParams(location.search);
 	const linkSeed = normSeed(params.get('shuffle') || params.get('seed') || ''); // ?seed= was the old name
