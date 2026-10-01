@@ -165,6 +165,19 @@
 	// ---------- rounds ----------
 	const CARD_COLORS = ['#5bb9a4', '#e9866a', '#9ec4e4', '#f2a33a', '#c5abc2', '#9fd08a', '#f2d0d6', '#e8c65a', '#81bed3', '#bcc7cd'];
 
+	// Cards are tinted by kind: [left, right] colors. Anything unmatched keeps the random pair.
+	const KINDS = [
+		[/^(under|over)(rated|hyped)/i, '#9ec4e4', '#c5abc2'], // rating
+		[/^(bad|worst|good|best)\b/i, '#e9866a', '#9fd08a'], // quality
+		[/food|eat|pizza|candy|cereal|cook|calorie|flavor|taste|mouthfeel|sandwich|fruit|vegetable|ice cream|breakfast|snack|meal|cuisine|sweet|savory|crunchy|chewy|spic|smell|scent/i, '#f2a33a', '#e8c65a'], // food and senses
+		[/movie|film|tv show|song|music|book|actor|musician|game|art\b|cartoon|disney|band|star |karaoke|listen|word|emoji/i, '#81bed3', '#bcc7cd'], // media
+		[/person|people|friend|president|hero|villain|athlete|role model|geek|nerd|jock|dork|hipster|introvert|extrovert|lazy|rude|polite/i, '#f2d0d6', '#5bb9a4'] // people
+	];
+	const kindColors = words => {
+		const k = KINDS.find(([re]) => re.test(words[0]) || re.test(words[1]));
+		return k && [k[1], k[2]];
+	};
+
 	function startRound() {
 		// Pass the turn only once the previous card was actually scored (and no catch-up turn was earned).
 		if (round.scored && !round.extraTurn) game.turn = 1 - game.turn;
@@ -176,8 +189,9 @@
 		const c1 = (c0 + 1 + Math.floor(rng() * (CARD_COLORS.length - 1))) % CARD_COLORS.length;
 		$('word1').textContent = words[0];
 		$('word2').textContent = words[1];
-		$('side1').style.background = CARD_COLORS[c0];
-		$('side2').style.background = CARD_COLORS[c1];
+		const [k0, k1] = kindColors(words) || [CARD_COLORS[c0], CARD_COLORS[c1]];
+		$('side1').style.background = k0;
+		$('side2').style.background = k1;
 		Object.assign(round, { scored: false, extraTurn: false });
 		drawTarget();
 		clearRound();
