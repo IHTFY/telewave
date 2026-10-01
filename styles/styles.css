@@ -114,7 +114,7 @@ svg.dial.locked { cursor: default; }
 .cardrow { display: grid; grid-template-columns: 56px auto 56px; align-items: center; gap: 10px; }
 .card {
   display: grid; grid-template-columns: 1fr 1fr; width: min(380px, 62vw); aspect-ratio: 7 / 4;
-  border-radius: 12px; overflow: hidden; box-shadow: 0 8px 18px rgba(0, 0, 0, .3); color: var(--ink);
+  border-radius: 12px; overflow: hidden; box-shadow: 4px 4px 0 -1px #ece4d4, 8px 8px 0 -2px #d9cfbc, 0 10px 20px rgba(0, 0, 0, .3); color: var(--ink);
 }
 .card .side { display: grid; grid-template-rows: auto 1fr; gap: 6px; padding: 12px 14px; text-align: center; min-width: 0; }
 .card .arrow { font-size: 1.4rem; line-height: 1; }
