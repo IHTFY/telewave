@@ -1,6 +1,5 @@
 (() => {
 	const $ = id => document.getElementById(id);
-	const IDLE_MSG = 'Telewave: peek at the target, give a clue, then guess.';
 
 	// ---------- storage (optional, per browser) ----------
 	const STORE = 'telewave.v2';
@@ -256,7 +255,7 @@
 		animateShade(0);
 		drawNeedle();
 		drawGem();
-		setStatus(IDLE_MSG);
+		setStatus('');
 	}
 
 	const points = d => d <= BAND / 2 ? 4 : d <= BAND * 1.5 ? 3 : d <= BAND * 2.5 ? 2 : 0;
@@ -370,7 +369,7 @@
 	});
 
 	const pct = $('percentages');
-	const applyPct = () => { $('guessdisp').hidden = !pct.checked; save(); };
+	const applyPct = () => { $('guessdisp').classList.toggle('off', !pct.checked); save(); };
 	pct.addEventListener('change', applyPct);
 
 	// Typed seeds and card numbers apply on Enter or when the box loses focus, never mid-typing.
@@ -407,10 +406,22 @@
 		else fallback();
 	});
 
+	// The seed tools are only needed when several devices share a game, so they start tucked away.
+	const showSeedBox = open => {
+		$('seedBox').hidden = !open;
+		$('seedToggle').setAttribute('aria-expanded', open);
+	};
+	$('seedToggle').addEventListener('click', () => {
+		const open = $('seedBox').hidden;
+		showSeedBox(open);
+		if (open) $('seed').focus();
+	});
+
 	// ---------- boot ----------
 	const params = new URLSearchParams(location.search);
 	const linkSeed = normSeed(params.get('seed') || '');
 	if (params.has('seed')) history.replaceState({}, '', location.pathname);
+	showSeedBox(!!linkSeed); // arriving from a shared link: show what was shared
 	game.seed = linkSeed || normSeed(saved.seed || '') || randomSeed();
 	game.card = Math.max(1, Math.floor(+(linkSeed ? params.get('card') : saved.card)) || 1);
 	if (saved.pct === false) pct.checked = false;
