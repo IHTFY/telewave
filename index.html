@@ -130,34 +130,43 @@
 				</button>
 			</div>
 			<div class="help-body">
-				<p>Each card has two opposite ideas. A hidden target sits somewhere between them. One player gives a clue, and their team tries to put the needle on the target.</p>
+				<section class="help-intro">
+					<div class="mini-card" aria-label="Example card: Cold on the left, Hot on the right">
+						<span style="background:#9ec4e4">&#10229; Cold</span><span style="background:#e9866a">Hot &#10230;</span>
+					</div>
+					<p>Every card has two opposites. A hidden target sits somewhere between them. Give a clue that points at it, and your team moves the needle there.</p>
+				</section>
 
-				<h3>A turn</h3>
-				<ol>
-					<li>The clue giver holds <b>Hold to peek</b> to see the target. Everyone else looks away.</li>
-					<li>They say a clue that fits that spot on the card. For "Hot / Cold", a lukewarm bath is near the middle.</li>
-					<li>The team talks it over, then drags the needle to their guess. The arrow keys work too.</li>
-					<li>Press <b>Guess</b> to open the shade and score the turn.</li>
+				<h3>On your turn</h3>
+				<ol class="steps">
+					<li><span class="n">1</span><p>Clue giver: hold <span class="chip peek">Hold to peek</span> to see the target. Everyone else looks away.</p></li>
+					<li><span class="n">2</span><p>Say a clue that fits that spot. For Cold / Hot, a lukewarm bath is near the middle.</p></li>
+					<li><span class="n">3</span><p>The team agrees, then drags the needle to their guess. Arrow keys work too.</p></li>
+					<li><span class="n">4</span><p>Press <span class="chip primary">Guess</span> to open the shade and score it.</p></li>
 				</ol>
 
 				<h3>Scoring</h3>
-				<ul>
-					<li>The centre band scores 4 points, the next band out 3, the outer band 2, and a miss 0.</li>
-					<li>The other team can bet on a side. Before the guess, they drop the pink token on the left or right of the card. If the target is on that side of the needle, they score 1 point. A bullseye cancels the bet.</li>
-					<li>A team that scores 4 but is still behind goes again.</li>
-					<li>Team 2 starts on 1 point. The first team to 10 wins, and a tie goes to sudden death.</li>
-				</ul>
+				<div class="score-demo">
+					<svg viewBox="0 0 300 160" role="img" aria-label="Dial with scoring bands: 4 points in the centre, 3 on each side of it, 2 on the outer edges"><path d="M10 150A140 140 0 0 1 290 150Z" fill="#ece8dc"/><path d="M150 150L235.2,38.9A140 140 0 0 0 203.6,20.7Z" fill="#f2a33a"/><text x="207.0" y="51.3" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="700" fill="#16203a">2</text><path d="M150 150L203.6,20.7A140 140 0 0 0 168.3,11.2Z" fill="#e8603c"/><text x="179.5" y="39.9" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="700" fill="#16203a">3</text><path d="M150 150L168.3,11.2A140 140 0 0 0 131.7,11.2Z" fill="#9ec4e4"/><text x="150.0" y="36.0" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="700" fill="#16203a">4</text><path d="M150 150L131.7,11.2A140 140 0 0 0 96.4,20.7Z" fill="#e8603c"/><text x="120.5" y="39.9" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="700" fill="#16203a">3</text><path d="M150 150L96.4,20.7A140 140 0 0 0 64.8,38.9Z" fill="#f2a33a"/><text x="93.0" y="51.3" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="700" fill="#16203a">2</text><line x1="150" y1="150" x2="130.6" y2="77.6" stroke="#c8262f" stroke-width="5" stroke-linecap="round"/><circle cx="150" cy="150" r="13" fill="#c8262f"/></svg>
+					<p>The closer to the centre, the more points. Anything outside the bands scores 0.</p>
+				</div>
+				<div class="tiles">
+					<div class="tile"><svg class="gem" viewBox="0 0 30 52" aria-hidden="true"><path d="M15 1C23 12 28 22 28 32c0 12-6 19-13 19S2 44 2 32C2 22 7 12 15 1Z" fill="var(--gem)"/><path d="M15 6v42M8 22l7 8 7-8M6 36l9 6 9-6" stroke="rgba(255,255,255,.45)" stroke-width="2" fill="none"/></svg><p><b>Bet.</b> The other team can drop the gem on the left or right of the needle before the guess. Right side, 1 point. A bullseye cancels it.</p></div>
+					<div class="tile"><span class="big">4</span><p><b>Catch up.</b> Score 4 while still behind and you go again.</p></div>
+					<div class="tile"><span class="big">10</span><p><b>Win.</b> First to 10 wins. Team 2 starts on 1. A tie goes to sudden death.</p></div>
+				</div>
 
 				<h3>Buttons</h3>
-				<ul>
-					<li><b>New card</b> deals the next card. If the last card was scored, the turn passes.</li>
-					<li><b>Clear</b> resets the needle and bet. A card scores only once.</li>
-					<li>The <b>%</b> switch shows the needle position as a number, which helps on a video call.</li>
-					<li>Click a score slot or use the -/+ buttons to fix a score. Click the turn badge to switch teams, or a team name to rename it.</li>
-				</ul>
+				<dl class="keys">
+					<dt><span class="chip">New card</span></dt><dd>Deal the next card. Pass the turn if the last one was scored.</dd>
+					<dt><span class="chip">Clear</span></dt><dd>Reset the needle and bet.</dd>
+					<dt><span class="chip pct">%</span></dt><dd>Show the needle as a number. Handy on a video call.</dd>
+					<dt><span class="chip"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 4a8 8 0 1 1-7.75 10h2.07A6 6 0 1 0 12 6v3L7.5 5 12 1v3Z" fill="currentColor"/></svg> New game</span></dt><dd>Start over with scores at zero.</dd>
+				</dl>
+				<p class="hint">Tap a score slot or the -/+ buttons to fix a score. Tap the turn badge to switch teams, or a team name to rename it.</p>
 
-				<h3>Playing on two devices</h3>
-				<p>Open <b>Shuffle</b> and enter the same word and card number on each device. Both show the same card and target, so the clue giver can peek on their own phone. Then everyone presses New card together.</p>
+				<h3>Two devices</h3>
+				<p class="two"><span class="chip"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41ZM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5Zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13Z" fill="currentColor"/></svg> Shuffle</span> Enter the same word and card number on each device. Both show the same card and target, so the clue giver can peek on their own phone. Then everyone presses New card together.</p>
 
 				<p class="help-foot"><a href="https://youtu.be/KuL_R60_320?t=225" target="_blank" rel="noopener">Watch a video of the original game</a></p>
 			</div>
