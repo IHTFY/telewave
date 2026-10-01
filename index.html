@@ -8,10 +8,15 @@
 		<title>Telewave</title>
 		<meta name="description" content="Telewave: an online take on the Wavelength party game">
 		<meta name="author" content="Frankie">
+		<meta name="theme-color" content="#111b35">
+		<link rel="manifest" href="manifest.webmanifest">
+		<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+		<link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32">
+		<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;600;700&display=swap">
-		<link rel="stylesheet" href="styles/styles.css?v=2.0">
+		<link rel="stylesheet" href="styles/styles.css?v=2.1">
 
 		<!-- Google Auto Ads -->
 		<script
@@ -178,8 +183,45 @@
 			</div>
 		</dialog>
 
+		<div class="update" id="update" role="status" hidden>
+			<span>A new version is ready.</span>
+			<button type="button" id="updateBtn" class="ctl primary">Reload</button>
+		</div>
+
 		<script src="scripts/seedrandom.js"></script>
 		<script src="scripts/data.js"></script>
 		<script src="scripts/board.js"></script>
+		<script>
+			if ('serviceWorker' in navigator) {
+				addEventListener('load', async () => {
+					const reg = await navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => null);
+					if (!reg) return;
+					const banner = document.getElementById('update');
+					const offer = worker => {
+						banner.hidden = false;
+						document.getElementById('updateBtn').onclick = () => worker.postMessage('SKIP_WAITING');
+					};
+					// A worker is already waiting (found on a previous visit) or one arrives later.
+					if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+					reg.addEventListener('updatefound', () => {
+						const w = reg.installing;
+						w.addEventListener('statechange', () => {
+							if (w.state === 'installed' && navigator.serviceWorker.controller) offer(w);
+						});
+					});
+					// Reload once the new worker takes over.
+					let reloading = false;
+					navigator.serviceWorker.addEventListener('controllerchange', () => {
+						if (reloading) return;
+						reloading = true;
+						location.reload();
+					});
+					// Long-lived tabs and installed apps: re-check on focus and hourly.
+					const check = () => reg.update().catch(() => {});
+					document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+					setInterval(check, 60 * 60 * 1000);
+				});
+			}
+		</script>
 	</body>
 </html>
