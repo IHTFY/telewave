@@ -36,6 +36,8 @@ body {
   background-image: var(--speckle, none);
   background-size: 220px;
   min-height: 100vh;
+  overflow-x: hidden; /* never let a thrown card widen the page */
+  overflow-x: clip;
 }
 
 .wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 16px; }
@@ -52,7 +54,10 @@ button:focus-visible, input:focus-visible, a:focus-visible, .dial:focus-visible 
 /* ---------- header ---------- */
 #header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
 #header h1 { font: 600 1.6rem var(--display); margin: 0 auto 0 0; letter-spacing: .02em; }
-.seed-container { display: flex; align-items: center; gap: 8px; border-radius: 10px; }
+.menu { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.menu [aria-expanded="true"] { color: var(--mint); }
+.seed-container { display: flex; flex-basis: 100%; justify-content: flex-end; align-items: center; gap: 8px; border-radius: 10px; }
+.seed-container[hidden] { display: none; }
 .seed-container.applied { animation: seed-applied .7s ease-out; }
 @keyframes seed-applied { from { box-shadow: 0 0 0 4px var(--mint); } to { box-shadow: 0 0 0 4px transparent; } }
 .label { font-weight: 700; font-size: .95rem; }
@@ -72,7 +77,9 @@ button:focus-visible, input:focus-visible, a:focus-visible, .dial:focus-visible 
 .icon-btn.copied { background: var(--mint); color: var(--ink); }
 
 /* percentage switch */
-.switch { position: relative; display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; font-size: .95rem; }
+.readout-row { display: flex; align-items: center; gap: 10px; }
+.readout.off { visibility: hidden; }
+.switch { position: relative; display: flex; align-items: center; cursor: pointer; }
 .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .switch-track {
   position: relative; width: 46px; height: 26px; border-radius: 13px; flex: none;
@@ -142,7 +149,7 @@ svg.dial.locked { cursor: default; }
 }
 .card .side { display: grid; grid-template-rows: auto 1fr; gap: 6px; padding: 12px 14px; text-align: center; min-width: 0; }
 .card .arrow { font-size: 1.4rem; line-height: 1; }
-.card .word { font: 700 clamp(.95rem, 2.6vw, 1.4rem)/1.2 var(--body); align-self: center; overflow-wrap: anywhere; text-wrap: balance; }
+.card .word { font: 700 clamp(.95rem, 2.6vw, 1.4rem)/1.2 var(--body); align-self: center; overflow-wrap: anywhere; hyphens: auto; text-wrap: balance; }
 .gemslot {
   height: 72px; padding: 0; border-radius: 10px; border: 2px dashed rgba(255, 255, 255, .35); background: transparent;
   display: grid; place-items: center; cursor: pointer;
@@ -164,7 +171,8 @@ svg.dial.locked { cursor: default; }
 .ctl.primary { background: var(--red); color: var(--paper); }
 .ctl.peek { background: var(--mint); }
 .ctl:disabled { opacity: .5; cursor: default; }
-.status { min-height: 1.5em; font: 600 1.2rem var(--display); text-align: center; text-wrap: balance; }
+.status:empty { display: none; }
+.status { font: 600 1.2rem var(--display); text-align: center; text-wrap: balance; }
 .readout { font: 700 .95rem var(--body); opacity: .85; font-variant-numeric: tabular-nums; }
 
 /* score tracks: 11 slots of 30px + 4px gap inside 8px padding */
@@ -205,7 +213,11 @@ svg.dial.locked { cursor: default; }
 }
 
 @media (max-width: 640px) {
-  #header h1 { flex-basis: 100%; }
+  .menu { gap: 6px; }
+  .menu .link-btn { padding: 8px; border-radius: 8px; background: rgba(255, 255, 255, .14); }
+  .menu .link-btn svg { width: 22px; height: 22px; }
+  .menu-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .seed-container { justify-content: flex-start; }
   .board { grid-template-columns: 1fr 1fr; padding: 12px; }
   .center { grid-column: 1 / -1; order: -1; }
   .cardrow { grid-template-columns: 36px auto 36px; gap: 6px; }

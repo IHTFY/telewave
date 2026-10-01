@@ -10,13 +10,14 @@
 	* Drag anywhere on the dial (or use the arrow keys when it is focused) to swing the red needle.
 	* The shade covers the target. Drag the mint handle up and over to slide it open, or **hold** the Peek button to open it and release to close it.
 * Functions:
+	* Seed (link icon in the top bar): shows the seed tools. Only needed when playing across several devices; opening a shared link shows them automatically.
 	* Seed: any word or number; capitals and extra spaces are ignored. Press Enter (or click away) to apply it, which starts that seed's deck from card 1. "New game" picks a random word.
 	* Card number (#): the position in the deck. Type a number to jump to that card.
 	* New card: deals the next card in the deck. If the last card was scored, the turn passes to the other team.
 	* Guess: locks the needle, opens the shade, and scores the round for the team whose turn it is.
 	* Hold to peek: opens the shade while held.
 	* Clear: closes the shade and resets the needle and guess token. A card is only scored once.
-	* Percentage: toggles the percentage readout under the dial. (The official rulebook advises against using percentages to discuss the dial, yet I've found that they make playing via videocall much easier.)
+	* Percentage: the % switch under the controls toggles the percentage readout. (The official rulebook advises against using percentages to discuss the dial, yet I've found that they make playing via videocall much easier.)
 * Scoring:
 	* Bands are worth 4 (centre), 3 and 2 points. Team 2 starts on 1 point; first to 10 wins, ties go to sudden death.
 	* Left/right bet: before the guess, the other team can place the pink guess token on the left or right of the card, betting the target is on that side of the needle. A correct bet scores them 1 point, unless the guess hit the 4-point band.
