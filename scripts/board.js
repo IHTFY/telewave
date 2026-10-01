@@ -173,7 +173,29 @@
 	};
 	const MIN_DIST = 100;
 
+	// Toss a copy of the old card off-screen so the new one appears to be underneath it.
+	function throwCard() {
+		const card = $('card');
+		if (!card.textContent.trim() || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		const r = card.getBoundingClientRect();
+		const ghost = card.cloneNode(true);
+		ghost.removeAttribute('id');
+		ghost.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+		ghost.setAttribute('aria-hidden', 'true');
+		Object.assign(ghost.style, { position: 'fixed', left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, margin: 0, zIndex: 50, pointerEvents: 'none', boxShadow: '0 14px 28px rgba(0, 0, 0, .35)' });
+		document.body.appendChild(ghost);
+		const dir = Math.random() < 0.5 ? -1 : 1;
+		const dx = dir * (innerWidth / 2 + r.width), dy = -r.height * (0.4 + Math.random() * 0.6);
+		ghost.animate([
+			{ transform: 'translate(0, 0) rotate(0deg)' },
+			{ transform: `translate(${dx * 0.08}px, ${dy * 0.25}px) rotate(${dir * 4}deg) scale(1.04)`, offset: 0.2 },
+			{ transform: `translate(${dx}px, ${dy}px) rotate(${dir * (25 + Math.random() * 20)}deg)` }
+		], { duration: 420, easing: 'cubic-bezier(.4, 0, .9, .6)' }).onfinish = () => ghost.remove();
+		card.animate([{ transform: 'scale(.94)', filter: 'brightness(.85)' }, { transform: 'none', filter: 'none' }], { duration: 260, easing: 'ease-out' });
+	}
+
 	function startRound() {
+		throwCard();
 		// Pass the turn only once the previous card was actually scored (and no catch-up turn was earned).
 		if (round.scored && !round.extraTurn) game.turn = 1 - game.turn;
 		const seed = $('seed').value.toLowerCase();
