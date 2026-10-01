@@ -74,7 +74,7 @@
 	}
 	$('ticks').innerHTML = html;
 
-	const GEM = '<svg viewBox="0 0 30 52" aria-hidden="true"><path d="M15 1C17 9 26 19 27 31v20H3V31C4 19 13 9 15 1Z" fill="#ece8dc"/><path d="M3 38l5-8 4 9 3-12 4 12 4-9 4 6v15H3Z" fill="var(--gem)"/><path d="M15 1C17 9 26 19 27 31v20H3V31C4 19 13 9 15 1Z" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+	const GEM = '<svg viewBox="0 0 30 52" aria-hidden="true"><g clip-path="url(#gemClip)"><rect width="30" height="52" fill="url(#gemFade)"/><path d="M7 52V30C7 16 12 7 19 1C23 -2.4 27 -6 31 -12H60V52ZM23 52V30C23 16 18 7 11 1C7 -2.4 3 -6 -1 -12H-30V52ZM11 52V30C11 16 16 7 23 1C27 -2.4 31 -6 35 -12H60V52ZM19 52V30C19 16 14 7 7 1C3 -2.4 -1 -6 -5 -12H-30V52ZM15 52V30C15 16 20 7 27 1C31 -2.4 35 -6 39 -12H60V52ZM15 52V30C15 16 10 7 3 1C-1 -2.4 -5 -6 -9 -12H-30V52Z" fill-rule="evenodd" fill="var(--gem)" fill-opacity=".5"/></g><path d="M3 51V30C3 16 8 7 15 1C22 7 27 16 27 30V51Z" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="1.5"/></svg>';
 	$('gemL').innerHTML = GEM;
 	$('gemR').innerHTML = GEM;
 
