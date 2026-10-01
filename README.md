@@ -2,4 +2,4 @@
 
 [Play it here](https://telewave.ihtfy.com/)
 
-[Instructions here](instructions.md)
+Instructions are in the game, behind the Instructions button.
