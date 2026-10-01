@@ -372,7 +372,7 @@
 	const applyPct = () => { $('guessdisp').classList.toggle('off', !pct.checked); save(); };
 	pct.addEventListener('change', applyPct);
 
-	// Typed seeds and card numbers apply on Enter or when the box loses focus, never mid-typing.
+	// Typed shuffle words and card numbers apply on Enter or when the box loses focus, never mid-typing.
 	const applySeed = from => {
 		const seed = normSeed($('seed').value) || randomSeed();
 		const card = Math.max(1, Math.floor(+$('cardNo').value) || 1);
@@ -389,7 +389,7 @@
 	});
 
 	$('copySeed').addEventListener('click', () => {
-		const url = `${location.origin}${location.pathname}?seed=${encodeURIComponent(game.seed)}&card=${game.card}`;
+		const url = `${location.origin}${location.pathname}?shuffle=${encodeURIComponent(game.seed)}&card=${game.card}`;
 		const btn = $('copySeed');
 		const done = () => { btn.classList.add('copied'); setTimeout(() => btn.classList.remove('copied'), 1200); };
 		const fallback = () => {
@@ -406,21 +406,21 @@
 		else fallback();
 	});
 
-	// The seed tools are only needed when several devices share a game, so they start tucked away.
+	// Shuffle tools only matter when several devices share a game, so they live in a popup.
 	const showSeedBox = open => {
 		$('seedBox').hidden = !open;
 		$('seedToggle').setAttribute('aria-expanded', open);
 	};
-	$('seedToggle').addEventListener('click', () => {
-		const open = $('seedBox').hidden;
-		showSeedBox(open);
-		if (open) $('seed').focus();
+	$('seedToggle').addEventListener('click', () => showSeedBox($('seedBox').hidden));
+	document.addEventListener('pointerdown', e => { if (!e.target.closest('.pop-wrap')) showSeedBox(false); });
+	document.addEventListener('keydown', e => {
+		if (e.key === 'Escape' && !$('seedBox').hidden) { showSeedBox(false); $('seedToggle').focus(); }
 	});
 
 	// ---------- boot ----------
 	const params = new URLSearchParams(location.search);
-	const linkSeed = normSeed(params.get('seed') || '');
-	if (params.has('seed')) history.replaceState({}, '', location.pathname);
+	const linkSeed = normSeed(params.get('shuffle') || params.get('seed') || ''); // ?seed= was the old name
+	if (linkSeed) history.replaceState({}, '', location.pathname);
 	showSeedBox(!!linkSeed); // arriving from a shared link: show what was shared
 	game.seed = linkSeed || normSeed(saved.seed || '') || randomSeed();
 	game.card = Math.max(1, Math.floor(+(linkSeed ? params.get('card') : saved.card)) || 1);

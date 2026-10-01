@@ -34,20 +34,27 @@
 						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm-1 11h2v2h-2v-2Zm1-8a3.5 3.5 0 0 1 1.7 6.56c-.47.27-.7.52-.7.94V14h-2v-.5c0-1.3.74-2 1.7-2.56A1.5 1.5 0 1 0 10.5 9.5h-2A3.5 3.5 0 0 1 12 7Z" fill="currentColor"/></svg>
 						<span class="menu-text">Instructions</span>
 					</a>
-					<button type="button" id="seedToggle" class="link-btn" aria-expanded="false" aria-controls="seedBox" title="Play on several devices with a shared seed">
-						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7a5 5 0 0 0 0 10h4v-1.9H7A3.1 3.1 0 0 1 3.9 12ZM8 13h8v-2H8v2Zm9-6h-4v1.9h4a3.1 3.1 0 0 1 0 6.2h-4V17h4a5 5 0 0 0 0-10Z" fill="currentColor"/></svg>
-						<span class="menu-text">Seed</span>
-					</button>
+					<div class="pop-wrap">
+						<button type="button" id="seedToggle" class="link-btn" aria-expanded="false" aria-controls="seedBox" title="Share the same cards across devices">
+							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41ZM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5Zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13Z" fill="currentColor"/></svg>
+							<span class="menu-text">Shuffle</span>
+						</button>
+						<div class="popup" id="seedBox" role="dialog" aria-label="Shuffle" hidden>
+							<p class="pop-hint">Playing on more than one device? Use the same shuffle word and card number on each, or send the link.</p>
+							<div class="pop-row">
+								<label for="seed" class="label">Shuffle</label>
+								<input type="text" id="seed" placeholder="any word" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+							</div>
+							<div class="pop-row">
+								<label for="cardNo" class="label">Card</label>
+								<input type="number" id="cardNo" min="1" step="1" inputmode="numeric" enterkeyhint="done">
+								<button type="button" id="copySeed" class="icon-btn" aria-label="Copy link to this shuffle and card" title="Copy link to this shuffle and card">
+									<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 3h9a2 2 0 0 1 2 2v11h-2V5H9V3Zm-4 4h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Zm0 2v11h9V9H5Z" fill="currentColor"/></svg>
+								</button>
+							</div>
+						</div>
+					</div>
 				</nav>
-				<div class="seed-container" id="seedBox" hidden>
-					<label for="seed" class="label">Seed</label>
-					<input type="text" id="seed" placeholder="any word" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
-					<label for="cardNo" class="label card-label" title="Card number: keep this the same on every device">#</label>
-					<input type="number" id="cardNo" min="1" step="1" inputmode="numeric" aria-label="Card number" enterkeyhint="done">
-					<button type="button" id="copySeed" class="icon-btn" aria-label="Copy link with this seed and card" title="Copy link with this seed and card">
-						<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 3h9a2 2 0 0 1 2 2v11h-2V5H9V3Zm-4 4h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Zm0 2v11h9V9H5Z" fill="currentColor"/></svg>
-					</button>
-				</div>
 			</header>
 
 			<section class="board" aria-label="Game board">
