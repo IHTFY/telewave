@@ -1,16 +1,18 @@
 # Basic instructions
 
 * [Good video explaining the game](https://youtu.be/KuL_R60_320?t=225)
-* The basis of this implementation is that **each seed generates a unique board**.
-	* This means that when two people input the same seed, they will have the same target position and words.
+* The basis of this implementation is that **each seed generates a unique game**.
+	* The seed shuffles the whole deck, and the **#** box counts which card you're on. Two devices with the same seed and card number show the same words and target.
+	* Share the seed once at the start (or copy the link), then everyone presses **New card** together. No card repeats until the whole deck has been played.
 	* It is possible then for the **clue giver** to open the board on their own computer/phone and **peek** at the target without having to share it in the videocall.
-	* The copy button beside the seed copies a link with the current seed to the clipboard.
+	* The copy button beside the seed copies a link with the current seed and card number to the clipboard. If devices drift apart, set the same card number on both.
 * The dial:
 	* Drag anywhere on the dial (or use the arrow keys when it is focused) to swing the red needle.
 	* The shade covers the target. Drag the mint handle up and over to slide it open, or **hold** the Peek button to open it and release to close it.
 * Functions:
-	* Seed: generates a unique board. The seed can be **any combination of numbers and letters**. (Tip: using words makes it easier to share the seed.)
-	* New card: generates a new random seed. If the last card was scored, the turn passes to the other team.
+	* Seed: any word or number; capitals and extra spaces are ignored. Press Enter (or click away) to apply it, which starts that seed's deck from card 1. "New game" picks a random word.
+	* Card number (#): the position in the deck. Type a number to jump to that card.
+	* New card: deals the next card in the deck. If the last card was scored, the turn passes to the other team.
 	* Guess: locks the needle, opens the shade, and scores the round for the team whose turn it is.
 	* Hold to peek: opens the shade while held.
 	* Clear: closes the shade and resets the needle and guess token. A card is only scored once.
