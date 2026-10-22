@@ -283,6 +283,13 @@ svg.dial.locked { cursor: default; }
   .turn-dot { animation: none; }
 }
 
+/* ---------- ad after a win ---------- */
+/* Below the board and 150px clear of its controls; the box keeps its size whether or not an ad fills it. */
+.win-ad { display: grid; justify-items: center; gap: 6px; padding-top: 150px; }
+.win-ad[hidden] { display: none; }
+.win-ad-label { margin: 0; font-size: .85rem; opacity: .75; }
+.win-ad-box { width: 300px; height: 250px; min-height: 250px; }
+
 /* ---------- update banner (service worker) ---------- */
 .update {
   position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);

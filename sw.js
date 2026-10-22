@@ -1,10 +1,10 @@
 /* Telewave service worker.
-   Offline: every app file is precached on install, and Google Fonts are cached too.
+   Offline: every app file is precached on install, and the game's two Google Fonts are cached too.
    Freshness: same-origin files are fetched network-first (cache is only the offline
    fallback), so a stale copy is never served while online. A changed sw.js installs
    as a waiting worker and the page offers a reload (see the script in index.html).
    Bump VERSION when you change the precache list; old caches are deleted on activate. */
-const VERSION = 'v2';
+const VERSION = 'v4';
 const APP = `telewave-app-${VERSION}`;
 const FONTS = 'telewave-fonts';
 const NETWORK_TIMEOUT = 4000;
@@ -12,7 +12,7 @@ const NETWORK_TIMEOUT = 4000;
 const PRECACHE = [
 	'./',
 	'index.html',
-	'styles/styles.css?v=2.1',
+	'styles/styles.css?v=2.2',
 	'scripts/seedrandom.js',
 	'scripts/data.js',
 	'scripts/board.js',
@@ -67,11 +67,14 @@ self.addEventListener('fetch', event => {
 
 	if (url.origin === location.origin) {
 		event.respondWith(networkFirst(req, url));
-	} else if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+	} else if (req.url === FONT_CSS || appFontFile(url)) {
 		event.respondWith(staleWhileRevalidate(req));
 	}
-	// anything else (ads, analytics) goes straight to the network
+	// Anything else goes straight to the network, never through a cache: the ad loader
+	// (ihtfy.com/ads/), AdSense, and Google's consent message, including the fonts it loads.
 });
+
+const appFontFile = url => url.hostname === 'fonts.gstatic.com' && /^\/s\/(fredoka|karla)\//.test(url.pathname);
 
 async function networkFirst(req, url) {
 	const cache = await caches.open(APP);
