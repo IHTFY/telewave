@@ -5,7 +5,7 @@ const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const vm = require('node:vm');
 
-// Just enough DOM for scripts/ads.js: elements by id, attached or not.
+// Just enough DOM for the ad code in scripts/board.js: elements by id, attached or not.
 class FakeElement {
 	constructor(id) { this.id = id; this.isConnected = true; this.hidden = true; this.listeners = {}; }
 	addEventListener(name, callback) { this.listeners[name] = callback; }
@@ -28,7 +28,11 @@ function harness({ onLine = true } = {}) {
 			head: { appendChild: el => { added.push(el); } }
 		}
 	});
-	vm.runInContext(readFileSync(join(__dirname, '../scripts/ads.js'), 'utf8'), context);
+	// The ad code sits at the top of board.js, ahead of the board itself.
+	const board = readFileSync(join(__dirname, '../scripts/board.js'), 'utf8');
+	const end = board.indexOf('\n// ---------- board ----------');
+	assert.ok(end > 0, 'board.js lost its ad section marker');
+	vm.runInContext(`${board.slice(0, end)}\nwindow.winAd = winAd;`, context);
 	return { ads: window.winAd, els, added, shown };
 }
 const settle = () => new Promise(resolve => setImmediate(resolve));

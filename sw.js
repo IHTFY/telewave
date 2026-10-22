@@ -15,7 +15,6 @@ const PRECACHE = [
 	'styles/styles.css?v=2.2',
 	'scripts/seedrandom.js',
 	'scripts/data.js',
-	'scripts/ads.js',
 	'scripts/board.js',
 	'manifest.webmanifest',
 	'icons/icon.svg',
