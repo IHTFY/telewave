@@ -12,7 +12,7 @@ class FakeElement {
 	remove() { this.isConnected = false; }
 }
 
-function harness({ onLine = true } = {}) {
+function harness({ onLine = true, storage = {}, cookie = '' } = {}) {
 	const added = [];
 	const shown = [];
 	const els = { winAd: new FakeElement('winAd'), winAdBox: new FakeElement('winAdBox') };
@@ -22,7 +22,9 @@ function harness({ onLine = true } = {}) {
 	const context = vm.createContext({
 		window,
 		navigator: { onLine },
+		localStorage: { getItem: key => storage[key] ?? null },
 		document: {
+			cookie,
 			getElementById: id => els[id],
 			createElement: () => new FakeElement(),
 			head: { appendChild: el => { added.push(el); } }
@@ -55,6 +57,30 @@ test('nothing loads until a win', () => {
 	h.ads.hide();
 	assert.equal(h.els.winAd.hidden, true);
 	assert.equal(h.added.length, 0);
+});
+
+test('nothing loads at startup for a visitor without an ad-free token', () => {
+	const h = harness();
+	h.ads.loadForBuyer();
+	assert.equal(h.added.length, 0);
+});
+
+test('a stored ad-free token loads the loader at startup, and a win reuses it', async () => {
+	const h = harness({ storage: { 'ihtfy-ad-free': 'x.y.z' } });
+	h.ads.loadForBuyer();
+	assert.equal(h.added.length, 1);
+	assert.equal(h.added[0].src, 'https://ihtfy.com/ads/v1.js');
+	h.ads.show('seed/12');
+	assert.equal(h.added.length, 1);
+	h.added[0].listeners.load();
+	await settle();
+	assert.deepEqual(h.shown, [[h.els.winAdBox, 'seed/12']]);
+});
+
+test('an ad-free cookie alone loads the loader at startup', () => {
+	const h = harness({ cookie: 'a=1; ihtfy-ad-free=x.y.z' });
+	h.ads.loadForBuyer();
+	assert.equal(h.added.length, 1);
 });
 
 test('offline, the slot stays empty and no loader is requested', () => {
