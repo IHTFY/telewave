@@ -9,7 +9,9 @@ const winAd = (() => {
 
 	// Fills the box with an ad for the game over named `key`; offline or on failure it stays empty.
 	function show(key) {
-		$('winAd').hidden = false;
+		const aside = $('winAd');
+		if (!aside) return; // cached older HTML without the ad markup
+		aside.hidden = false;
 		if (!navigator.onLine) return;
 		loader ??= new Promise((resolve, reject) => {
 			const script = document.createElement('script');
@@ -25,13 +27,14 @@ const winAd = (() => {
 		});
 		// hide() swaps the box out; a box removed while the loader was on its way gets no ad.
 		const box = $('winAdBox');
+		if (!box) return;
 		loader.then(() => box.isConnected && window.ihtfyAds.show(box, key), () => {});
 	}
 
 	// Swaps in an empty box, so the next win gets its own ad instead of keeping this one.
 	function hide() {
 		const aside = $('winAd');
-		if (aside.hidden) return;
+		if (!aside || aside.hidden) return;
 		aside.hidden = true;
 		const box = $('winAdBox');
 		box.replaceWith(box.cloneNode(false));
@@ -471,7 +474,8 @@ const winAd = (() => {
 	// ---------- boot ----------
 	const params = new URLSearchParams(location.search);
 	const linkSeed = normSeed(params.get('shuffle') || params.get('seed') || ''); // ?seed= was the old name
-	if (linkSeed) history.replaceState({}, '', location.pathname);
+	// The loader checks ?adtest=on later, so the cleanup keeps it: a check run must never get live ads.
+	if (linkSeed) history.replaceState({}, '', params.get('adtest') === 'on' ? `${location.pathname}?adtest=on` : location.pathname);
 	showSeedBox(!!linkSeed); // arriving from a shared link: show what was shared
 	game.seed = linkSeed || normSeed(saved.seed || '') || randomSeed();
 	game.card = Math.max(1, Math.floor(+(linkSeed ? params.get('card') : saved.card)) || 1);

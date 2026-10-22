@@ -101,3 +101,22 @@ test('a box removed before the loader arrives gets no ad, so its replacement can
 	assert.deepEqual(h.shown, [[h.els.winAdBox, 'seed/12']]);
 	assert.notEqual(h.els.winAdBox, old);
 });
+
+test('older cached HTML without the ad markup does not throw', () => {
+	const h = harness();
+	delete h.els.winAd;
+	delete h.els.winAdBox;
+	assert.doesNotThrow(() => { h.ads.hide(); h.ads.show('seed/1'); });
+	assert.equal(h.added.length, 0);
+});
+
+test('boot keeps ?adtest=on when it strips the shuffle link', () => {
+	const board = readFileSync(join(__dirname, '../scripts/board.js'), 'utf8');
+	const line = board.split('\n').find(l => l.includes('if (linkSeed) history.replaceState'));
+	for (const [search, expected] of [['?shuffle=apple&card=12&adtest=on', '/p?adtest=on'], ['?shuffle=apple&card=12', '/p']]) {
+		let url = null;
+		const params = new URLSearchParams(search);
+		vm.runInContext(line, vm.createContext({ linkSeed: 'apple', params, location: { pathname: '/p' }, history: { replaceState: (_s, _t, u) => { url = u; } } }));
+		assert.equal(url, expected);
+	}
+});
