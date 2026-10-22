@@ -256,6 +256,7 @@
 		drawNeedle();
 		drawGem();
 		setStatus('');
+		winAd.hide(); // play goes on: no ad while a card is up
 	}
 
 	const points = d => d <= BAND / 2 ? 4 : d <= BAND * 1.5 ? 3 : d <= BAND * 2.5 ? 2 : 0;
@@ -287,6 +288,7 @@
 			const [a, b] = game.scores;
 			if (a >= 10 || b >= 10) {
 				msg = a === b ? `${msg} · Tied at ${a}: sudden death!` : `${game.names[a > b ? 0 : 1]} wins, ${Math.max(a, b)} to ${Math.min(a, b)}!`;
+				if (a !== b) winAd.show(`${game.seed}/${game.card}`);
 			}
 			drawScores();
 		}
