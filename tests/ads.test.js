@@ -35,7 +35,7 @@ function harness({ onLine = true, storage = {}, cookie = '' } = {}) {
 	const end = board.indexOf('\n// ---------- board ----------');
 	assert.ok(end > 0, 'board.js lost its ad section marker');
 	vm.runInContext(`${board.slice(0, end)}\nwindow.winAd = winAd;`, context);
-	return { ads: window.winAd, els, added, shown };
+	return { ads: window.winAd, els, added, shown, context };
 }
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
@@ -81,6 +81,13 @@ test('an ad-free cookie alone loads the loader at startup', () => {
 	const h = harness({ cookie: 'a=1; ihtfy-ad-free=x.y.z' });
 	h.ads.loadForBuyer();
 	assert.equal(h.added.length, 1);
+});
+
+test('a frame that may not read cookies still starts', () => {
+	const h = harness();
+	Object.defineProperty(h.context.document, 'cookie', { get() { throw new Error('SecurityError'); } });
+	assert.doesNotThrow(() => h.ads.loadForBuyer());
+	assert.equal(h.added.length, 0);
 });
 
 test('offline, the slot stays empty and no loader is requested', () => {

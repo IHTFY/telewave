@@ -23,9 +23,10 @@ const winAd = (() => {
 
 	// Loads the loader now if this browser holds an ad-free token; the loader checks it.
 	function loadForBuyer() {
-		let stored = null;
-		try { stored = localStorage.getItem('ihtfy-ad-free'); } catch { /* storage off: the cookie may still hold it */ }
-		if (stored || /(?:^|;\s*)ihtfy-ad-free=/.test(document.cookie)) load().catch(() => {});
+		let found = false;
+		try { found = !!localStorage.getItem('ihtfy-ad-free'); } catch { /* storage off: the cookie may still hold it */ }
+		try { found ||= /(?:^|;\s*)ihtfy-ad-free=/.test(document.cookie); } catch { /* a sandboxed frame may not read cookies */ }
+		if (found) load().catch(() => {});
 	}
 
 	// Fills the box with an ad for the game over named `key`; offline or on failure it stays empty.
