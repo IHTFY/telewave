@@ -61,8 +61,8 @@ const winAd = (() => {
 // game gets a new box and key, so a new ad, but at most once a minute, since a game can be
 // cut short; so does a window resized into the other size. The ad never changes on a timer.
 const playAd = (() => {
-	// Shares the results unit until a unit of its own exists in AdSense.
-	const PLAY_AD_SLOT = '6470163205';
+	// The games-play unit: 300×600 in AdSense; the 160×600 box uses it too.
+	const PLAY_AD_SLOT = '7239875855';
 	const MIN_NEW_GAME_GAP = 60 * 1000;
 	const $ = id => document.getElementById(id);
 	const root = document.documentElement;
