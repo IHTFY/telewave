@@ -108,14 +108,25 @@ const playAd = (() => {
 		request();
 	});
 
-	// The instructions dialog and its backdrop stop 150px short of the ad. The root resizes with
-	// the window and when a scrollbar comes or goes; either can move the ad or change its size.
-	new ResizeObserver(() => {
+	// The instructions dialog and its backdrop stop 150px short of the ad.
+	function fit() {
 		const current = size();
 		if (current) root.style.setProperty('--play-ad-right', `${Math.round(root.clientWidth - $('playAd').getBoundingClientRect().left + 150)}px`);
 		else root.style.removeProperty('--play-ad-right');
 		if (started && current !== shownSize) request();
-	}).observe(root);
+	}
+	// The root resizes with the window and when a scrollbar comes or goes; either can move the ad or change its size.
+	new ResizeObserver(fit).observe(root);
+
+	// The script in <head> hides the ad for any browser holding an ad-free token. The loader checks the token, and
+	// a token it rejects brings the ad back. A loader that fails to load keeps it hidden, since no ad could load then either.
+	if (root.classList.contains('ad-free')) {
+		winAd.load().then(() => window.ihtfyAds.adFree(), () => true).then(free => {
+			if (free) return;
+			root.classList.remove('ad-free');
+			fit();
+		});
+	}
 
 	return { newGame };
 })();
