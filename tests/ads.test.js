@@ -187,7 +187,7 @@ test('the ad beside the game loads nothing before the first tap or key press, th
 	await settle();
 	const box = h.els.playAdBox;
 	assert.deepEqual(h.shown, [[box, 'play/1']]);
-	assert.deepEqual({ ...box.dataset }, { adSlot: '6470163205', adSize: '160x600' });
+	assert.deepEqual({ ...box.dataset }, { adSlot: '7239875855', adSize: '160x600' });
 });
 
 test('a window without room for the ad beside the game, or offline, loads nothing', async () => {
