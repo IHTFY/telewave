@@ -175,12 +175,17 @@ button:focus-visible, input:focus-visible, a:focus-visible, .dial:focus-visible 
   transition: background-color .3s;
 }
 .turn[data-team="1"] { background: var(--team1); }
-.turn-dot {
-  width: 12px; height: 12px; border-radius: 50%; background: var(--paper);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, .35);
+.turn-dot { position: relative; width: 12px; height: 12px; }
+.turn-dot::before, .turn-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; }
+.turn-dot::after { background: var(--paper); }
+/* The pulsing ring is a disc behind the dot that scales and fades, so it animates on the compositor
+   instead of repainting a box-shadow every frame. */
+.turn-dot::before {
+  background: rgba(255, 255, 255, .35);
+  transform: scale(1.5);
   animation: pulse 1.6s ease-in-out infinite;
 }
-@keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(255, 255, 255, 0); } }
+@keyframes pulse { 50% { transform: scale(2.1667); opacity: 0; } }
 
 /* dial */
 svg.dial { width: 100%; max-width: 720px; height: auto; display: block; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; border-radius: 12px; }
@@ -280,7 +285,7 @@ svg.dial.locked { cursor: default; }
 @media (prefers-reduced-motion: reduce) {
   .head, .gemslot svg, .turn, .track, .switch-track, .switch-knob { transition: none; }
   .popup.applied { animation: none; }
-  .turn-dot { animation: none; }
+  .turn-dot::before { animation: none; }
 }
 
 /* ---------- ad after a win ---------- */
