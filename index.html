@@ -13,10 +13,20 @@
 		<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 		<link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32">
 		<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+		<script>
+			// A browser that may hold an ad-free token gets no ad beside the game, so the game never moves to make
+			// room for one. The shared loader checks the token itself; winAd.loadForBuyer in scripts/board.js runs the same test.
+			(() => {
+				let found = false;
+				try { found = !!localStorage.getItem('ihtfy-ad-free'); } catch { /* storage off: the cookie may still hold it */ }
+				try { found ||= /(?:^|;\s*)ihtfy-ad-free=/.test(document.cookie); } catch { /* a sandboxed frame may not read cookies */ }
+				if (found) document.documentElement.classList.add('ad-free');
+			})();
+		</script>
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;600;700&display=swap">
-		<link rel="stylesheet" href="styles/styles.css?v=2.3">
+		<link rel="stylesheet" href="styles/styles.css?v=2.4">
 	</head>
 
 	<body>
@@ -26,108 +36,116 @@
 				<clipPath id="gemClip"><path d="M3 51V30C3 16 8 7 15 1C22 7 27 16 27 30V51Z"/></clipPath>
 			</defs>
 		</svg>
-		<div class="wrap">
-			<header id="header">
-				<h1>Telewave</h1>
-				<nav class="menu">
-					<button type="button" id="newGame" class="link-btn">
-						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4a8 8 0 1 1-7.75 10h2.07A6 6 0 1 0 12 6v3L7.5 5 12 1v3Z" fill="currentColor"/></svg>
-						<span class="menu-text">New game</span>
-					</button>
-					<button type="button" id="helpBtn" class="link-btn" aria-haspopup="dialog">
-						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm-1 11h2v2h-2v-2Zm1-8a3.5 3.5 0 0 1 1.7 6.56c-.47.27-.7.52-.7.94V14h-2v-.5c0-1.3.74-2 1.7-2.56A1.5 1.5 0 1 0 10.5 9.5h-2A3.5 3.5 0 0 1 12 7Z" fill="currentColor"/></svg>
-						<span class="menu-text">Instructions</span>
-					</button>
-					<div class="pop-wrap">
-						<button type="button" id="seedToggle" class="link-btn" aria-expanded="false" aria-controls="seedBox" title="Share the same cards across devices">
-							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41ZM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5Zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13Z" fill="currentColor"/></svg>
-							<span class="menu-text">Shuffle</span>
+		<div class="play-frame">
+			<div class="wrap">
+				<header id="header">
+					<h1>Telewave</h1>
+					<nav class="menu">
+						<button type="button" id="newGame" class="link-btn">
+							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4a8 8 0 1 1-7.75 10h2.07A6 6 0 1 0 12 6v3L7.5 5 12 1v3Z" fill="currentColor"/></svg>
+							<span class="menu-text">New game</span>
 						</button>
-						<div class="popup" id="seedBox" role="dialog" aria-label="Shuffle" hidden>
-							<p class="pop-hint">Playing on more than one device? Use the same shuffle word and card number on each, or send the link.</p>
-							<div class="pop-row">
-								<label for="seed" class="label">Shuffle</label>
-								<input type="text" id="seed" placeholder="any word" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
-							</div>
-							<div class="pop-row">
-								<label for="cardNo" class="label">Card</label>
-								<input type="number" id="cardNo" min="1" step="1" inputmode="numeric" enterkeyhint="done">
-								<button type="button" id="copySeed" class="icon-btn" aria-label="Copy link to this shuffle and card" title="Copy link to this shuffle and card">
-									<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 3h9a2 2 0 0 1 2 2v11h-2V5H9V3Zm-4 4h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Zm0 2v11h9V9H5Z" fill="currentColor"/></svg>
-								</button>
+						<button type="button" id="helpBtn" class="link-btn" aria-haspopup="dialog">
+							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm-1 11h2v2h-2v-2Zm1-8a3.5 3.5 0 0 1 1.7 6.56c-.47.27-.7.52-.7.94V14h-2v-.5c0-1.3.74-2 1.7-2.56A1.5 1.5 0 1 0 10.5 9.5h-2A3.5 3.5 0 0 1 12 7Z" fill="currentColor"/></svg>
+							<span class="menu-text">Instructions</span>
+						</button>
+						<div class="pop-wrap">
+							<button type="button" id="seedToggle" class="link-btn" aria-expanded="false" aria-controls="seedBox" title="Share the same cards across devices">
+								<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41ZM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5Zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13Z" fill="currentColor"/></svg>
+								<span class="menu-text">Shuffle</span>
+							</button>
+							<div class="popup" id="seedBox" role="dialog" aria-label="Shuffle" hidden>
+								<p class="pop-hint">Playing on more than one device? Use the same shuffle word and card number on each, or send the link.</p>
+								<div class="pop-row">
+									<label for="seed" class="label">Shuffle</label>
+									<input type="text" id="seed" placeholder="any word" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+								</div>
+								<div class="pop-row">
+									<label for="cardNo" class="label">Card</label>
+									<input type="number" id="cardNo" min="1" step="1" inputmode="numeric" enterkeyhint="done">
+									<button type="button" id="copySeed" class="icon-btn" aria-label="Copy link to this shuffle and card" title="Copy link to this shuffle and card">
+										<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 3h9a2 2 0 0 1 2 2v11h-2V5H9V3Zm-4 4h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Zm0 2v11h9V9H5Z" fill="currentColor"/></svg>
+									</button>
+								</div>
 							</div>
 						</div>
-					</div>
-				</nav>
-			</header>
+					</nav>
+				</header>
 
-			<section class="board" aria-label="Game board">
-				<div class="track" id="track0"></div>
+				<section class="board" aria-label="Game board">
+					<div class="track" id="track0"></div>
 
-				<div class="center">
-					<button type="button" id="turn" class="turn" aria-live="polite" title="Click to switch turns">
-						<span class="turn-dot" aria-hidden="true"></span>
-						<span id="turnText">Team 1's turn</span>
-					</button>
+					<div class="center">
+						<button type="button" id="turn" class="turn" aria-live="polite" title="Click to switch turns">
+							<span class="turn-dot" aria-hidden="true"></span>
+							<span id="turnText">Team 1's turn</span>
+						</button>
 
-					<svg class="dial" id="dial" viewBox="0 0 760 420" role="slider" tabindex="0"
-						aria-label="Guess dial" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
-						<defs>
-							<pattern id="speck" patternUnits="userSpaceOnUse" width="220" height="220">
-								<image id="speckImg" width="220" height="220"/>
-							</pattern>
-							<clipPath id="upper"><rect x="0" y="0" width="760" height="330"/></clipPath>
-							<clipPath id="faceClip"><path id="faceClipPath"/></clipPath>
-						</defs>
-						<g id="scallops"></g>
-						<path id="casing" class="navy"/>
-						<path id="casingSpeck" fill="url(#speck)"/>
-						<path id="face" class="face"/>
-						<g clip-path="url(#faceClip)"><g id="target"></g><g id="ticks"></g></g>
-						<g clip-path="url(#upper)"><path id="shade" class="shade"/></g>
-						<path id="panel" class="navy"/>
-						<path id="panelSpeck" fill="url(#speck)"/>
-						<rect id="stopL" class="mint" rx="7"/>
-						<g id="handle"><rect id="handleBar" class="mint" rx="9"/><rect id="handleHit" fill="transparent"/></g>
-						<g id="needle">
-							<line id="guessLine" class="needle-line"/>
-							<circle id="hubRing" class="hub-ring" r="46"/>
-							<circle id="hub" class="hub" r="34"/>
-						</g>
-					</svg>
+						<svg class="dial" id="dial" viewBox="0 0 760 420" role="slider" tabindex="0"
+							aria-label="Guess dial" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+							<defs>
+								<pattern id="speck" patternUnits="userSpaceOnUse" width="220" height="220">
+									<image id="speckImg" width="220" height="220"/>
+								</pattern>
+								<clipPath id="upper"><rect x="0" y="0" width="760" height="330"/></clipPath>
+								<clipPath id="faceClip"><path id="faceClipPath"/></clipPath>
+							</defs>
+							<g id="scallops"></g>
+							<path id="casing" class="navy"/>
+							<path id="casingSpeck" fill="url(#speck)"/>
+							<path id="face" class="face"/>
+							<g clip-path="url(#faceClip)"><g id="target"></g><g id="ticks"></g></g>
+							<g clip-path="url(#upper)"><path id="shade" class="shade"/></g>
+							<path id="panel" class="navy"/>
+							<path id="panelSpeck" fill="url(#speck)"/>
+							<rect id="stopL" class="mint" rx="7"/>
+							<g id="handle"><rect id="handleBar" class="mint" rx="9"/><rect id="handleHit" fill="transparent"/></g>
+							<g id="needle">
+								<line id="guessLine" class="needle-line"/>
+								<circle id="hubRing" class="hub-ring" r="46"/>
+								<circle id="hub" class="hub" r="34"/>
+							</g>
+						</svg>
 
-					<div class="cardrow">
-						<button type="button" class="gemslot" id="gemL" aria-pressed="false" aria-label="Other team bets the target is LEFT of the needle"></button>
-						<div class="card" id="card">
-							<div class="side" id="side1"><span class="arrow" aria-hidden="true">&#10229;</span><span class="word" id="word1"></span></div>
-							<div class="side" id="side2"><span class="arrow" aria-hidden="true">&#10230;</span><span class="word" id="word2"></span></div>
+						<div class="cardrow">
+							<button type="button" class="gemslot" id="gemL" aria-pressed="false" aria-label="Other team bets the target is LEFT of the needle"></button>
+							<div class="card" id="card">
+								<div class="side" id="side1"><span class="arrow" aria-hidden="true">&#10229;</span><span class="word" id="word1"></span></div>
+								<div class="side" id="side2"><span class="arrow" aria-hidden="true">&#10230;</span><span class="word" id="word2"></span></div>
+							</div>
+							<button type="button" class="gemslot" id="gemR" aria-pressed="false" aria-label="Other team bets the target is RIGHT of the needle"></button>
 						</div>
-						<button type="button" class="gemslot" id="gemR" aria-pressed="false" aria-label="Other team bets the target is RIGHT of the needle"></button>
+
+						<div class="controls">
+							<button type="button" class="ctl" id="new">New card</button>
+							<button type="button" class="ctl peek" id="reveal">Hold to peek</button>
+							<button type="button" class="ctl primary" id="commit">Guess</button>
+							<button type="button" class="ctl" id="reset">Clear</button>
+						</div>
+						<div class="readout-row">
+							<output class="readout" id="guessdisp" for="dial">50%</output>
+							<label class="switch" for="percentages" title="Show the needle position as a percentage">
+								<input type="checkbox" id="percentages" role="switch" checked aria-label="Show percentage">
+								<span class="switch-track" aria-hidden="true"><span class="switch-knob">%</span></span>
+							</label>
+						</div>
+						<div class="status" id="score" aria-live="polite"></div>
 					</div>
 
-					<div class="controls">
-						<button type="button" class="ctl" id="new">New card</button>
-						<button type="button" class="ctl peek" id="reveal">Hold to peek</button>
-						<button type="button" class="ctl primary" id="commit">Guess</button>
-						<button type="button" class="ctl" id="reset">Clear</button>
-					</div>
-					<div class="readout-row">
-						<output class="readout" id="guessdisp" for="dial">50%</output>
-						<label class="switch" for="percentages" title="Show the needle position as a percentage">
-							<input type="checkbox" id="percentages" role="switch" checked aria-label="Show percentage">
-							<span class="switch-track" aria-hidden="true"><span class="switch-knob">%</span></span>
-						</label>
-					</div>
-					<div class="status" id="score" aria-live="polite"></div>
-				</div>
-
-				<div class="track" id="track1"></div>
-			</section>
-			<div class="stripes" aria-hidden="true"></div>
-			<!-- Shown only after a team wins, at least 150px below the board; the box keeps its size whether or not an ad fills it. -->
-			<aside class="win-ad" id="winAd" hidden>
+					<div class="track" id="track1"></div>
+				</section>
+				<div class="stripes" aria-hidden="true"></div>
+				<!-- Shown only after a team wins, at least 150px below the board; the box keeps its size whether or not an ad fills it. -->
+				<aside class="win-ad" id="winAd" hidden>
+					<p class="win-ad-label">Advertisements</p>
+					<div class="win-ad-box" id="winAdBox" data-ad-slot="6470163205"></div>
+					<a class="win-ad-label" href="https://ihtfy.com/privacy" target="_blank" rel="noopener">Privacy</a>
+				</aside>
+			</div>
+			<!-- Beside the game on wide windows only, 150px from it; the box keeps its size whether or not an ad fills it. -->
+			<aside class="play-ad" id="playAd">
 				<p class="win-ad-label">Advertisements</p>
-				<div class="win-ad-box" id="winAdBox" data-ad-slot="6470163205"></div>
+				<div class="play-ad-box" id="playAdBox"></div>
 				<a class="win-ad-label" href="https://ihtfy.com/privacy" target="_blank" rel="noopener">Privacy</a>
 			</aside>
 		</div>

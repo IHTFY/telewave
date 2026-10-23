@@ -1,8 +1,10 @@
-// The ad below the board comes from the shared IHTFY loader, which ihtfy.com serves for
-// all the games (its source is in the IHTFY/com.ihtfy repo). Nothing ad-related loads
-// until a team wins: the loader arrives then, and AdSense after it at browser idle.
-// A visitor who may have bought ad-free gets the loader at startup instead (loadForBuyer),
-// so it can hide the slot before it shows. The slot hides again as soon as play goes on.
+// The ads below the board and beside the game come from the shared IHTFY loader, which
+// ihtfy.com serves for all the games (its source is in the IHTFY/com.ihtfy repo). Nothing
+// ad-related loads until a team wins or, on a window wide enough for the ad beside the
+// game, until the first tap or key press: the loader arrives then, and AdSense after it at
+// browser idle. A visitor who may have bought ad-free gets the loader at startup instead
+// (loadForBuyer), so it can hide the slot before it shows. The slot below the board hides
+// again as soon as play goes on.
 const winAd = (() => {
 	const LOADER = 'https://ihtfy.com/ads/v1.js';
 	const $ = id => document.getElementById(id);
@@ -51,7 +53,89 @@ const winAd = (() => {
 		box.replaceWith(box.cloneNode(false));
 	}
 
-	return { show, hide, loadForBuyer };
+	return { show, hide, loadForBuyer, load };
+})();
+
+// The ad beside the game. The stylesheet decides whether the window has room for it and at
+// which width (160 or 300px); a browser that may hold an ad-free token gets none. Each new
+// game gets a new box and key, so a new ad, but at most once a minute, since a game can be
+// cut short; so does a window resized into the other size. The ad never changes on a timer.
+const playAd = (() => {
+	// Shares the results unit until a unit of its own exists in AdSense.
+	const PLAY_AD_SLOT = '6470163205';
+	const MIN_NEW_GAME_GAP = 60 * 1000;
+	const $ = id => document.getElementById(id);
+	const root = document.documentElement;
+	let started = false;
+	let shownSize = null;
+	let requestedAt = -Infinity;
+	let opened = 0;
+
+	// The size the stylesheet gives the box, or null where the ad is hidden (or the markup is missing).
+	const size = () => {
+		const box = $('playAdBox');
+		return box?.offsetWidth ? `${box.offsetWidth}x600` : null;
+	};
+
+	// A box holds one ad, so a new key gets an empty box.
+	function emptyBox() {
+		const box = $('playAdBox');
+		const fresh = box.cloneNode(false);
+		box.replaceWith(fresh);
+		return fresh;
+	}
+
+	function request() {
+		shownSize = size();
+		if (!shownSize) {
+			// The window got too small for the ad: an ad still on its way must not land in the hidden box.
+			if (opened) emptyBox();
+			return;
+		}
+		if (!navigator.onLine) return;
+		const box = opened ? emptyBox() : $('playAdBox');
+		box.dataset.adSlot = PLAY_AD_SLOT;
+		box.dataset.adSize = shownSize;
+		const key = `play/${++opened}`;
+		requestedAt = Date.now();
+		// A box replaced while the loader was on its way gets no ad. A loader that fails to load leaves the
+		// box empty, and the next new game tries again.
+		winAd.load().then(() => box.isConnected && window.ihtfyAds.show(box, key), () => {});
+	}
+
+	function newGame() {
+		if (started && Date.now() - requestedAt >= MIN_NEW_GAME_GAP) request();
+	}
+
+	const firstInput = new Promise(resolve => {
+		for (const type of ['pointerdown', 'keydown']) addEventListener(type, resolve, { once: true, capture: true });
+	});
+	firstInput.then(() => {
+		started = true;
+		request();
+	});
+
+	// The instructions dialog and its backdrop stop 150px short of the ad.
+	function fit() {
+		const current = size();
+		if (current) root.style.setProperty('--play-ad-right', `${Math.round(root.clientWidth - $('playAd').getBoundingClientRect().left + 150)}px`);
+		else root.style.removeProperty('--play-ad-right');
+		if (started && current !== shownSize) request();
+	}
+	// The root resizes with the window and when a scrollbar comes or goes; either can move the ad or change its size.
+	new ResizeObserver(fit).observe(root);
+
+	// The script in <head> hides the ad for any browser holding an ad-free token. The loader checks the token, and
+	// a token it rejects brings the ad back. A loader that fails to load keeps it hidden, since no ad could load then either.
+	if (root.classList.contains('ad-free')) {
+		winAd.load().then(() => window.ihtfyAds.adFree(), () => true).then(free => {
+			if (free) return;
+			root.classList.remove('ad-free');
+			fit();
+		});
+	}
+
+	return { newGame };
 })();
 
 // ---------- board ----------
@@ -425,6 +509,7 @@ const winAd = (() => {
 		game.card = 1;
 		startRound();
 		flashSeed();
+		playAd.newGame();
 	});
 
 	const pct = $('percentages');
