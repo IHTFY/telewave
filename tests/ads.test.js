@@ -290,3 +290,17 @@ test('a loader that fails to load keeps the ad beside the game away', async () =
 	await settle();
 	assert.equal(h.classes.has('ad-free'), true);
 });
+
+test('an ad still on its way stays out of a box the window has become too small for', async () => {
+	const h = harness({ adWidth: 160 });
+	h.input('pointerdown');
+	await settle();
+	const pending = h.els.playAdBox;
+	assert.equal(pending.dataset.adSize, '160x600');
+	h.layout.adWidth = 0;
+	h.layout.resized();
+	assert.equal(pending.isConnected, false);
+	h.added[0].listeners.load();
+	await settle();
+	assert.equal(h.shown.length, 0);
+});

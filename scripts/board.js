@@ -77,16 +77,23 @@ const playAd = (() => {
 		return box?.offsetWidth ? `${box.offsetWidth}x600` : null;
 	};
 
+	// A box holds one ad, so a new key gets an empty box.
+	function emptyBox() {
+		const box = $('playAdBox');
+		const fresh = box.cloneNode(false);
+		box.replaceWith(fresh);
+		return fresh;
+	}
+
 	function request() {
 		shownSize = size();
-		if (!shownSize || !navigator.onLine) return;
-		let box = $('playAdBox');
-		// A box holds one ad: a new key gets an empty box.
-		if (opened) {
-			const fresh = box.cloneNode(false);
-			box.replaceWith(fresh);
-			box = fresh;
+		if (!shownSize) {
+			// The window got too small for the ad: an ad still on its way must not land in the hidden box.
+			if (opened) emptyBox();
+			return;
 		}
+		if (!navigator.onLine) return;
+		const box = opened ? emptyBox() : $('playAdBox');
 		box.dataset.adSlot = PLAY_AD_SLOT;
 		box.dataset.adSize = shownSize;
 		const key = `play/${++opened}`;
