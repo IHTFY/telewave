@@ -349,7 +349,7 @@ const playAd = (() => {
 	function deal(seed, n) {
 		const pass = Math.floor((n - 1) / data.length);
 		const order = data.map((_, i) => i);
-		const shuffle = new Math.seedrandom(`${seed}|deck|${pass}`);
+		const shuffle = seededRandom(`${seed}|deck|${pass}`);
 		for (let i = order.length - 1; i > 0; i--) {
 			const j = Math.floor(shuffle() * (i + 1));
 			[order[i], order[j]] = [order[j], order[i]];
@@ -373,7 +373,7 @@ const playAd = (() => {
 		throwCard();
 		// Pass the turn only once the previous card was actually scored (and no catch-up turn was earned).
 		if (round.scored && !round.extraTurn) game.turn = 1 - game.turn;
-		const rng = new Math.seedrandom(`${game.seed}|${game.card}`);
+		const rng = seededRandom(`${game.seed}|${game.card}`);
 		round.target = BAND / 2 + rng() * (100 - BAND); // keep the 4-point band fully on the dial
 		const words = deal(game.seed, game.card);
 		const c0 = Math.floor(rng() * CARD_COLORS.length);

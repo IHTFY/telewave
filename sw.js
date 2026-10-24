@@ -4,7 +4,7 @@
    fallback), so a stale copy is never served while online. A changed sw.js installs
    as a waiting worker and the page offers a reload (see the script in index.html).
    Bump VERSION when you change the precache list; old caches are deleted on activate. */
-const VERSION = 'v6';
+const VERSION = 'v7';
 const APP = `telewave-app-${VERSION}`;
 const FONTS = 'telewave-fonts';
 const NETWORK_TIMEOUT = 4000;
@@ -13,7 +13,7 @@ const PRECACHE = [
 	'./',
 	'index.html',
 	'styles/styles.css?v=2.4',
-	'scripts/seedrandom.js',
+	'scripts/random.js',
 	'scripts/data.js',
 	'scripts/board.js',
 	'manifest.webmanifest',
