@@ -291,12 +291,24 @@ svg.dial.locked { cursor: default; }
   .turn-dot::before { animation: none; }
 }
 
-/* ---------- ad after a win ---------- */
-/* Below the board and 150px clear of its controls; the box keeps its size whether or not an ad fills it. */
-.win-ad { display: grid; justify-items: center; gap: 6px; padding-top: 150px; }
-.win-ad[hidden] { display: none; }
+/* ---------- results screen and its ad ---------- */
+/* After a win the board gives way to the result, the buttons and the ad, so all three are in view at once. */
+.wrap.is-won > .board, .wrap.is-won > .stripes { display: none; }
+.win-screen { display: grid; justify-items: center; gap: 16px; text-align: center; }
+.win-screen[hidden] { display: none; }
+.win-text { margin: 0; font: 600 1.6rem var(--display); text-wrap: balance; }
+.win-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+/* 150px clear of the buttons (16px of grid gap plus the margin) on a wide window, 50px on a phone. The box keeps
+   its size whether or not an ad fills it; the link row sits 50px below the box. Ad-free browsers get neither. */
+.win-ad { display: grid; justify-items: center; gap: 6px; margin-top: 134px; }
+.win-ad[hidden], :root.ad-free .win-ad { display: none; }
 .win-ad-label { margin: 0; font-size: .85rem; opacity: .75; }
-.win-ad-box { width: 300px; height: 250px; min-height: 250px; }
+.win-ad-box { width: 300px; height: 250px; margin-bottom: 44px; }
+.win-ad-box[data-ad-size="320x100"] { width: 320px; height: 100px; }
+.win-ad-box[data-ad-size="320x50"] { width: 320px; height: 50px; }
+@media (max-width: 640px) {
+  .win-ad { margin-top: 34px; }
+}
 
 /* ---------- ad beside the game ---------- */
 /* Only where the window fits the game at its full 1080px, 150px of space and the ad, with 15px spare for a

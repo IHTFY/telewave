@@ -7,13 +7,17 @@ const vm = require('node:vm');
 
 // Just enough DOM for the ad code in scripts/board.js: elements by id, attached or not.
 class FakeElement {
-	constructor(id) { this.id = id; this.isConnected = true; this.hidden = true; this.listeners = {}; this.dataset = {}; }
+	constructor(id) {
+		this.id = id; this.isConnected = true; this.hidden = true; this.listeners = {}; this.dataset = {};
+		this.classes = new Set();
+		this.classList = { add: name => this.classes.add(name), remove: name => this.classes.delete(name) };
+	}
 	addEventListener(name, callback) { this.listeners[name] = callback; }
 	remove() { this.isConnected = false; }
 }
 
 // `adWidth` is the width the stylesheet gives the box beside the game: 0 where it is hidden.
-function harness({ onLine = true, storage = {}, cookie = '', adWidth = 0, adFreeClass = false } = {}) {
+function harness({ onLine = true, storage = {}, cookie = '', adWidth = 0, adFreeClass = false, innerHeight = 640, boxTop = 232 } = {}) {
 	const added = [];
 	const shown = [];
 	const layout = { adWidth, adLeft: 1500, clientWidth: 1920, resized: () => {} };
@@ -21,13 +25,16 @@ function harness({ onLine = true, storage = {}, cookie = '', adWidth = 0, adFree
 	const box = id => Object.defineProperties(new FakeElement(id), {
 		offsetWidth: { get: () => (id === 'playAdBox' ? layout.adWidth : 0) },
 		cloneNode: { value: () => box(id) },
+		getBoundingClientRect: { value: () => ({ top: boxTop }) },
 		replaceWith: { value(fresh) { this.isConnected = false; els[id] = fresh; } }
 	});
-	const els = { winAd: new FakeElement('winAd'), winAdBox: box('winAdBox'), playAd: new FakeElement('playAd'), playAdBox: box('playAdBox') };
+	const winScreen = Object.assign(new FakeElement('winScreen'), { parentElement: new FakeElement('wrap') });
+	const els = { winScreen, winText: new FakeElement('winText'), playAgain: Object.assign(new FakeElement('playAgain'), { focus() {} }), winAd: new FakeElement('winAd'), winAdBox: box('winAdBox'), playAd: new FakeElement('playAd'), playAdBox: box('playAdBox') };
 	els.playAd.getBoundingClientRect = () => ({ left: layout.adLeft });
 	const style = new Map();
 	const clock = { now: 0 };
-	const window = { ihtfyAds: { show: (box, key) => shown.push([box, key]), adFree: async () => true } };
+	const scrolls = [];
+	const window = { innerHeight, scrollTo: (x, y) => scrolls.push([x, y]), ihtfyAds: { show: (box, key) => shown.push([box, key]), adFree: async () => true } };
 	// The class the <head> script sets; `onRemove` stands in for the stylesheet showing the ad again.
 	const classes = new Set(adFreeClass ? ['ad-free'] : []);
 	const classList = { contains: name => classes.has(name), remove: name => { classes.delete(name); classList.onRemove?.(); } };
@@ -55,9 +62,9 @@ function harness({ onLine = true, storage = {}, cookie = '', adWidth = 0, adFree
 	const board = readFileSync(join(__dirname, '../scripts/board.js'), 'utf8');
 	const end = board.indexOf('\n// ---------- board ----------');
 	assert.ok(end > 0, 'board.js lost its ad section marker');
-	vm.runInContext(`${board.slice(0, end)}\nwindow.winAd = winAd;\nwindow.playAd = playAd;`, context);
+	vm.runInContext(`${board.slice(0, end)}\nwindow.winAd = winAd;\nwindow.results = results;\nwindow.playAd = playAd;`, context);
 	const input = type => events.dispatchEvent(new Event(type));
-	return { ads: window.winAd, playAd: window.playAd, els, added, shown, context, layout, style, clock, input, classes, classList, window };
+	return { scrolls, ads: window.winAd, results: window.results, playAd: window.playAd, els, added, shown, context, layout, style, clock, input, classes, classList, window };
 }
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
@@ -303,4 +310,82 @@ test('an ad still on its way stays out of a box the window has become too small 
 	h.added[0].listeners.load();
 	await settle();
 	assert.equal(h.shown.length, 0);
+});
+
+// ---------- which screens get a box ----------
+const html = readFileSync(join(__dirname, '../index.html'), 'utf8');
+const css = readFileSync(join(__dirname, '../styles/styles.css'), 'utf8');
+
+test('the biggest size that fits the room below the box top is used, down to 320x50', () => {
+	const h = harness();
+	for (const [room, size] of [[800, '300x250'], [250, '300x250'], [249, '320x100'], [100, '320x100'], [99, '320x50'], [10, '320x50']]) {
+		assert.equal(h.ads.pickSize(room), size, `room ${room}`);
+	}
+});
+
+test('the results box is sized from the window before any ad is asked for, offline too', () => {
+	for (const [innerHeight, size] of [[640, '300x250'], [400, '320x100'], [300, '320x50']]) {
+		for (const onLine of [true, false]) {
+			const h = harness({ innerHeight, onLine });
+			h.ads.show('seed/12');
+			assert.equal(h.els.winAdBox.dataset.adSize, size);
+		}
+	}
+});
+
+test('play gets no ad: nothing loads or shows until the results screen appears, and it hides on play', async () => {
+	const h = harness();
+	h.results.hide();
+	await settle();
+	assert.equal(h.added.length, 0);
+	assert.equal(h.els.winScreen.hidden, true);
+	assert.equal(h.els.winAd.hidden, true);
+	h.results.show('Team 1 wins, 10 to 4!', 'seed/12');
+	assert.equal(h.els.winScreen.hidden, false);
+	assert.equal(h.els.winScreen.parentElement.classes.has('is-won'), true);
+	assert.equal(h.els.winText.textContent, 'Team 1 wins, 10 to 4!');
+	assert.equal(h.els.winAd.hidden, false);
+	assert.deepEqual(h.scrolls, [[0, 0]]);
+	h.added[0].listeners.load();
+	await settle();
+	assert.deepEqual(h.shown.map(([, key]) => key), ['seed/12']);
+	h.results.hide();
+	assert.equal(h.els.winScreen.hidden, true);
+	assert.equal(h.els.winScreen.parentElement.classes.has('is-won'), false);
+	assert.equal(h.els.winAd.hidden, true);
+});
+
+test('the only ad box in the page is in the results screen, outside every dialog and pop-up', () => {
+	assert.equal(html.match(/data-ad-slot=/g).length, 1);
+	const screen = html.slice(html.indexOf('<section class="win-screen"'), html.indexOf('</section>', html.indexOf('<section class="win-screen"')));
+	assert.ok(screen.includes('data-ad-slot="6470163205"'));
+	assert.ok(screen.includes('<p class="win-ad-label">Advertisements</p>'));
+	assert.match(screen, /<section class="win-screen" id="winScreen"[^>]* hidden>/);
+	assert.match(screen, /<aside class="win-ad" id="winAd" hidden>/);
+	// The dialog and the pop-up hold no box.
+	const dialog = html.slice(html.indexOf('<dialog'), html.indexOf('</dialog>'));
+	assert.equal(dialog.includes('data-ad-slot') || dialog.includes('Advertisements'), false);
+	const popup = html.slice(html.indexOf('id="seedBox"'), html.indexOf('</div>\n\t\t\t\t\t\t</div>', html.indexOf('id="seedBox"')));
+	assert.equal(popup.includes('data-ad-slot'), false);
+});
+
+test('the ad beside the game is hidden below 1440px, so a phone never gets it during play', () => {
+	assert.match(css, /\n\.play-ad \{ display: none; \}/);
+	const shows = [...css.matchAll(/\.play-ad \{ display: grid/g)];
+	assert.equal(shows.length, 1);
+	const between = css.slice(css.lastIndexOf('@media', shows[0].index), shows[0].index);
+	assert.ok(between.startsWith('@media (min-width: 1440px)') && !between.includes('\n}'));
+});
+
+test('a buyer gets no box and no reserved space, and the ad is never fixed to the screen', () => {
+	assert.match(css, /:root\.ad-free \.win-ad \{ display: none; \}|:root\.ad-free \.win-ad\s*\{[^}]*display: none/);
+	const adCss = css.slice(css.indexOf('/* ---------- results screen'), css.indexOf('/* ---------- update banner'));
+	assert.equal(/position:\s*(fixed|sticky)/.test(adCss), false);
+	assert.equal(/\.win-ad[^{]*\{[^}]*display: none !important/.test(css), false);
+});
+
+test('the privacy links end in a slash', () => {
+	const links = html.match(/https:\/\/ihtfy\.com\/privacy[^"]*/g);
+	assert.equal(links.length, 3);
+	assert.deepEqual([...new Set(links)], ['https://ihtfy.com/privacy/']);
 });
