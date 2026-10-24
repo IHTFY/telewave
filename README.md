@@ -1,4 +1,4 @@
-# Telewave
+# Tellwave
 
 [Play it here](https://telewave.ihtfy.com/)
 

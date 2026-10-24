@@ -1,4 +1,4 @@
-/* Telewave service worker.
+/* Tellwave service worker.
    Offline: every app file is precached on install, and the game's two Google Fonts are cached too.
    Freshness: same-origin files are fetched network-first (cache is only the offline
    fallback), so a stale copy is never served while online. A changed sw.js installs
