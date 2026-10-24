@@ -1,4 +1,4 @@
-# Tellwave
+# Frequency
 
 [Play it here](https://telewave.ihtfy.com/)
 
