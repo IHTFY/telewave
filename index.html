@@ -212,7 +212,7 @@
 			if ('serviceWorker' in navigator) {
 				addEventListener('load', async () => {
 					// On a first visit the new worker claims the page too; only an update should reload it.
-					const hadController = !!navigator.serviceWorker.controller;
+					let controlled = !!navigator.serviceWorker.controller;
 					const reg = await navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => null);
 					if (!reg) return;
 					const banner = document.getElementById('update');
@@ -231,7 +231,8 @@
 					// Reload once the new worker takes over an already-controlled page.
 					let reloading = false;
 					navigator.serviceWorker.addEventListener('controllerchange', () => {
-						if (reloading || !hadController) return;
+						if (reloading) return;
+						if (!controlled) { controlled = true; return; }
 						reloading = true;
 						location.reload();
 					});

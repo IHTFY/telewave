@@ -51,3 +51,10 @@ test('an update reloads exactly once when the new worker takes over', async () =
 	visitor.takeOver();
 	assert.equal(visitor.reloads(), 1);
 });
+
+test('an update found in a tab that was first controlled this visit still reloads', async () => {
+	const visitor = await visit({ controlled: false });
+	visitor.takeOver();
+	visitor.takeOver();
+	assert.equal(visitor.reloads(), 1);
+});
