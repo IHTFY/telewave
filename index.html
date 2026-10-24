@@ -26,7 +26,7 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;600;700&display=swap">
-		<link rel="stylesheet" href="styles/styles.css?v=2.4">
+		<link rel="stylesheet" href="styles/styles.css?v=2.5">
 	</head>
 
 	<body>
@@ -135,18 +135,26 @@
 					<div class="track" id="track1"></div>
 				</section>
 				<div class="stripes" aria-hidden="true"></div>
-				<!-- Shown only after a team wins, at least 150px below the board; the box keeps its size whether or not an ad fills it. -->
-				<aside class="win-ad" id="winAd" hidden>
-					<p class="win-ad-label">Advertisements</p>
-					<div class="win-ad-box" id="winAdBox" data-ad-slot="6470163205"></div>
-					<a class="win-ad-label" href="https://ihtfy.com/privacy" target="_blank" rel="noopener">Privacy</a>
-				</aside>
+				<!-- The results screen, shown in place of the board after a team wins. The ad sits between the buttons and the
+				     links, at least 50px from both on phones; the box keeps its size whether or not an ad fills it. -->
+				<section class="win-screen" id="winScreen" aria-labelledby="winText" hidden>
+					<p class="win-text" id="winText" role="status"></p>
+					<div class="win-actions">
+						<button type="button" class="ctl primary" id="playAgain">Play again</button>
+						<button type="button" class="ctl" id="backToBoard">Back to board</button>
+					</div>
+					<aside class="win-ad" id="winAd" hidden>
+						<p class="win-ad-label">Advertisements</p>
+						<div class="win-ad-box" id="winAdBox" data-ad-slot="6470163205"></div>
+						<a class="win-ad-label" href="https://ihtfy.com/privacy/" target="_blank" rel="noopener">Privacy</a>
+					</aside>
+				</section>
 			</div>
 			<!-- Beside the game on wide windows only, 150px from it; the box keeps its size whether or not an ad fills it. -->
 			<aside class="play-ad" id="playAd">
 				<p class="win-ad-label">Advertisements</p>
 				<div class="play-ad-box" id="playAdBox"></div>
-				<a class="win-ad-label" href="https://ihtfy.com/privacy" target="_blank" rel="noopener">Privacy</a>
+				<a class="win-ad-label" href="https://ihtfy.com/privacy/" target="_blank" rel="noopener">Privacy</a>
 			</aside>
 		</div>
 
@@ -196,7 +204,7 @@
 				<h3>Two devices</h3>
 				<p class="two"><span class="chip"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41ZM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5Zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13Z" fill="currentColor"/></svg> Shuffle</span> Enter the same word and card number on each device. Both show the same card and target, so the clue giver can peek on their own phone. Then everyone presses New card together.</p>
 
-				<p class="help-foot"><a href="https://youtu.be/KuL_R60_320?t=225" target="_blank" rel="noopener">Watch a video of the original game</a> · <a href="https://ihtfy.com/support/" target="_blank" rel="noopener">Support ♥</a> · <a href="https://ihtfy.com/privacy" target="_blank" rel="noopener">Privacy</a></p>
+				<p class="help-foot"><a href="https://youtu.be/KuL_R60_320?t=225" target="_blank" rel="noopener">Watch a video of the original game</a> · <a href="https://ihtfy.com/support/" target="_blank" rel="noopener">Support ♥</a> · <a href="https://ihtfy.com/privacy/" target="_blank" rel="noopener">Privacy</a></p>
 			</div>
 		</dialog>
 

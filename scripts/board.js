@@ -4,9 +4,14 @@
 // game, until the first tap or key press: the loader arrives then, and AdSense after it at
 // browser idle. A visitor who may have bought ad-free gets the loader at startup instead
 // (loadForBuyer), so it can hide the slot before it shows. The slot below the board hides
-// again as soon as play goes on.
+// again as soon as play goes on. The results screen that holds it replaces the board, so the box, the result
+// and the buttons are in view together; it picks the biggest of three sizes that fits the window.
 const winAd = (() => {
 	const LOADER = 'https://ihtfy.com/ads/v1.js';
+	// The sizes the box may take, biggest first, as [data-ad-size, height]: the first that fits the room
+	// between the box's top and the bottom of the window.
+	const SIZES = [['300x250', 250], ['320x100', 100], ['320x50', 50]];
+	const pickSize = room => (SIZES.find(([, height]) => height <= room) ?? SIZES.at(-1))[0];
 	const $ = id => document.getElementById(id);
 	let loader = null;
 
@@ -36,11 +41,12 @@ const winAd = (() => {
 		const aside = $('winAd');
 		if (!aside) return; // cached older HTML without the ad markup
 		aside.hidden = false;
+		const box = $('winAdBox');
+		// Sized before any ad comes, so nothing shifts when it fills; offline the empty box keeps that size too.
+		box.dataset.adSize = pickSize(window.innerHeight - box.getBoundingClientRect().top);
 		if (!navigator.onLine) return;
 		const ready = load();
 		// hide() swaps the box out; a box removed while the loader was on its way gets no ad.
-		const box = $('winAdBox');
-		if (!box) return;
 		ready.then(() => box.isConnected && window.ihtfyAds.show(box, key), () => {});
 	}
 
@@ -53,7 +59,31 @@ const winAd = (() => {
 		box.replaceWith(box.cloneNode(false));
 	}
 
-	return { show, hide, loadForBuyer, load };
+	return { show, hide, loadForBuyer, load, pickSize };
+})();
+
+// The results screen takes the board's place after a win, so the result, the buttons and the ad are in view
+// together. It is the only screen that gets an ad on a phone: the board never does.
+const results = (() => {
+	const $ = id => document.getElementById(id);
+
+	function show(msg, key) {
+		$('winText').textContent = msg;
+		$('winScreen').hidden = false;
+		$('winScreen').parentElement.classList.add('is-won');
+		// The player may have scrolled down to the Guess button; the box is placed and sized from the top of the page.
+		window.scrollTo(0, 0);
+		winAd.show(key);
+		$('playAgain').focus({ preventScroll: true });
+	}
+
+	function hide() {
+		winAd.hide();
+		$('winScreen').hidden = true;
+		$('winScreen').parentElement.classList.remove('is-won');
+	}
+
+	return { show, hide };
 })();
 
 // The ad beside the game. The stylesheet decides whether the window has room for it and at
@@ -397,7 +427,7 @@ const playAd = (() => {
 		drawNeedle();
 		drawGem();
 		setStatus('');
-		winAd.hide(); // play goes on: no ad while a card is up
+		results.hide(); // play goes on: no ad while a card is up
 	}
 
 	const points = d => d <= BAND / 2 ? 4 : d <= BAND * 1.5 ? 3 : d <= BAND * 2.5 ? 2 : 0;
@@ -429,7 +459,7 @@ const playAd = (() => {
 			const [a, b] = game.scores;
 			if (a >= 10 || b >= 10) {
 				msg = a === b ? `${msg} · Tied at ${a}: sudden death!` : `${game.names[a > b ? 0 : 1]} wins, ${Math.max(a, b)} to ${Math.min(a, b)}!`;
-				if (a !== b) winAd.show(`${game.seed}/${game.card}`);
+				if (a !== b) { showSeedBox(false); results.show(msg, `${game.seed}/${game.card}`); }
 			}
 			drawScores();
 		}
@@ -494,6 +524,8 @@ const playAd = (() => {
 	// ---------- buttons ----------
 	$('commit').addEventListener('click', guess);
 	$('reset').addEventListener('click', clearRound);
+	$('playAgain').addEventListener('click', () => $('newGame').click());
+	$('backToBoard').addEventListener('click', () => { results.hide(); $('commit').focus(); });
 	$('new').addEventListener('click', nextCard);
 	['L', 'R'].forEach(side => $('gem' + side).addEventListener('click', () => {
 		if (round.revealed) return;
