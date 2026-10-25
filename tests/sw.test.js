@@ -11,7 +11,7 @@ function fetchHandler() {
 	// Only the routing is under test, so the cache never answers.
 	const self = { addEventListener: (name, callback) => { listeners[name] = callback; } };
 	vm.runInContext(readFileSync(join(__dirname, '../sw.js'), 'utf8'), vm.createContext({
-		self, URL, location: new URL('https://telewave.ihtfy.com/sw.js'), caches: { open: () => new Promise(() => {}) }, fetch() {}, setTimeout
+		self, URL, location: new URL('https://frequency.ihtfy.com/sw.js'), caches: { open: () => new Promise(() => {}) }, fetch() {}, setTimeout
 	}));
 	return url => {
 		let answered = false;
@@ -24,7 +24,7 @@ const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;
 
 test('the game and its own fonts go through the worker', () => {
 	const answers = fetchHandler();
-	assert.equal(answers('https://telewave.ihtfy.com/scripts/board.js'), true);
+	assert.equal(answers('https://frequency.ihtfy.com/scripts/board.js'), true);
 	assert.equal(answers(FONT_CSS), true);
 	assert.equal(answers('https://fonts.gstatic.com/s/fredoka/v14/a.woff2'), true);
 	assert.equal(answers('https://fonts.gstatic.com/s/karla/v31/b.woff2'), true);
