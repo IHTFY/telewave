@@ -1,6 +1,6 @@
 # Agent instructions
 
-Frequency is a static browser game, live at https://telewave.ihtfy.com.
+Frequency is a static browser game, live at https://frequency.ihtfy.com (telewave.ihtfy.com redirects there).
 
 Security stage: public
 
