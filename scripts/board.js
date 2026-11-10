@@ -176,7 +176,7 @@ const playAd = (() => {
 	const STORE = 'telewave.v2';
 	const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { return {}; } };
 	const save = () => {
-		try { localStorage.setItem(STORE, JSON.stringify({ scores: game.scores, names: game.names, turn: game.turn, pct: $('percentages').checked, seed: game.seed, card: game.card })); } catch (e) { /* storage unavailable */ }
+		try { localStorage.setItem(STORE, JSON.stringify({ scores: game.scores, names: game.names, turn: game.turn, pct: $('percentages').checked, seed: game.seed, card: game.card, scored: round.scored, extraTurn: round.extraTurn })); } catch (e) { /* storage unavailable */ }
 	};
 
 	// ---------- geometry: one mapping shared by target, needle, ticks and pointer ----------
@@ -252,8 +252,8 @@ const playAd = (() => {
 	// ---------- state ----------
 	const saved = load();
 	const game = {
-		scores: Array.isArray(saved.scores) ? saved.scores.map(n => clamp(+n || 0, 0, 10)) : [0, 1], // team 2 starts at 1, as in the rules
-		names: Array.isArray(saved.names) ? saved.names.map(String) : ['Team 1', 'Team 2'],
+		scores: Array.isArray(saved.scores) && saved.scores.length === 2 ? saved.scores.map(n => clamp(+n || 0, 0, 100)) : [0, 1], // team 2 starts at 1, as in the rules
+		names: Array.isArray(saved.names) && saved.names.length === 2 ? saved.names.map(String) : ['Team 1', 'Team 2'],
 		turn: saved.turn === 1 ? 1 : 0,
 		seed: '', card: 1, // one seed per game shuffles the deck; card counts through it
 	};
@@ -288,7 +288,7 @@ const playAd = (() => {
 	}
 	function drawScores() {
 		[0, 1].forEach(i => {
-			$('head' + i).style.setProperty('--n', game.scores[i]);
+			$('head' + i).style.setProperty('--n', Math.min(game.scores[i], 10)); // the track ends at 10; the real total can run higher in sudden death
 			$('track' + i).classList.toggle('active', game.turn === i);
 		});
 		const turn = $('turn');
@@ -326,7 +326,7 @@ const playAd = (() => {
 		el.addEventListener('click', e => {
 			const b = e.target.closest('button');
 			if (!b) return;
-			game.scores[i] = clamp(b.dataset.n !== undefined ? +b.dataset.n : game.scores[i] + +b.dataset.d, 0, 10);
+			game.scores[i] = clamp(b.dataset.n !== undefined ? +b.dataset.n : game.scores[i] + +b.dataset.d, 0, 100);
 			drawScores();
 		});
 		$('name' + i).value = game.names[i];
@@ -451,8 +451,8 @@ const playAd = (() => {
 			msg += ' (already scored this card)';
 		} else {
 			round.scored = true;
-			game.scores[me] = clamp(game.scores[me] + pts, 0, 10);
-			game.scores[them] = clamp(game.scores[them] + bonus, 0, 10);
+			game.scores[me] += pts;
+			game.scores[them] += bonus;
 			// Catch-up rule: a bullseye by a team that is still behind earns another turn.
 			round.extraTurn = pts === 4 && game.scores[me] < game.scores[them];
 			if (round.extraTurn) msg += ` · Still behind: ${game.names[me]} goes again`;
@@ -607,9 +607,14 @@ const playAd = (() => {
 	winAd.loadForBuyer();
 	showSeedBox(!!linkSeed); // arriving from a shared link: show what was shared
 	game.seed = linkSeed || normSeed(saved.seed || '') || randomSeed();
-	game.card = Math.max(1, Math.floor(+(linkSeed ? params.get('card') : saved.card)) || 1);
+	const card = Math.floor(+(linkSeed ? params.get('card') : saved.card));
+	game.card = Number.isFinite(card) ? Math.max(1, card) : 1;
 	if (saved.pct === false) pct.checked = false;
 	applyPct();
 	drawShade();
 	startRound();
+	// A reload between Guess and New card: the same card comes back already scored.
+	if (saved.scored === true && saved.seed === game.seed && saved.card === game.card) {
+		Object.assign(round, { scored: true, extraTurn: saved.extraTurn === true });
+	}
 })();
