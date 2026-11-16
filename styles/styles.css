@@ -234,7 +234,7 @@ svg.dial.locked { cursor: default; }
 .ctl:disabled { opacity: .5; cursor: default; }
 .status:empty { display: none; }
 .status { font: 600 1.2rem var(--display); text-align: center; text-wrap: balance; }
-.readout { font: 700 .95rem var(--body); opacity: .85; font-variant-numeric: tabular-nums; }
+.readout { font: 700 .95rem var(--body); color: #f2f6fa; font-variant-numeric: tabular-nums; }
 
 /* score tracks: 11 slots of 30px + 4px gap inside 8px padding */
 .track { display: grid; gap: 6px; justify-items: center; padding: 6px 4px; border-radius: 16px; transition: background-color .3s, box-shadow .3s; }
