@@ -185,6 +185,7 @@ const playAd = (() => {
 	const ang = v => Math.PI * (1 - v / 100); // 0% = left horizon, 100% = right horizon
 	const pt = (v, r) => [CX + r * Math.cos(ang(v)), CY - r * Math.sin(ang(v))];
 	const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+	const MAX_SCORE = 999; // the same cap for saved scores, the +/- buttons and scoring, so a reload never changes a total
 	const toValue = (x, y) => {
 		let a = Math.atan2(CY - y, x - CX);
 		if (a < 0) a = x < CX ? Math.PI : 0; // below the horizon: snap to the nearest end
@@ -252,8 +253,8 @@ const playAd = (() => {
 	// ---------- state ----------
 	const saved = load();
 	const game = {
-		scores: Array.isArray(saved.scores) && saved.scores.length === 2 ? saved.scores.map(n => clamp(+n || 0, 0, 100)) : [0, 1], // team 2 starts at 1, as in the rules
-		names: Array.isArray(saved.names) && saved.names.length === 2 ? saved.names.map(String) : ['Team 1', 'Team 2'],
+		scores: Array.isArray(saved.scores) && saved.scores.length === 2 ? saved.scores.map(n => clamp(+n || 0, 0, MAX_SCORE)) : [0, 1], // team 2 starts at 1, as in the rules
+		names: Array.isArray(saved.names) && saved.names.length === 2 ? saved.names.map(n => String(n).slice(0, 24)) : ['Team 1', 'Team 2'],
 		turn: saved.turn === 1 ? 1 : 0,
 		seed: '', card: 1, // one seed per game shuffles the deck; card counts through it
 	};
@@ -326,7 +327,7 @@ const playAd = (() => {
 		el.addEventListener('click', e => {
 			const b = e.target.closest('button');
 			if (!b) return;
-			game.scores[i] = clamp(b.dataset.n !== undefined ? +b.dataset.n : game.scores[i] + +b.dataset.d, 0, 100);
+			game.scores[i] = clamp(b.dataset.n !== undefined ? +b.dataset.n : game.scores[i] + +b.dataset.d, 0, MAX_SCORE);
 			drawScores();
 		});
 		$('name' + i).value = game.names[i];
@@ -451,8 +452,8 @@ const playAd = (() => {
 			msg += ' (already scored this card)';
 		} else {
 			round.scored = true;
-			game.scores[me] += pts;
-			game.scores[them] += bonus;
+			game.scores[me] = Math.min(game.scores[me] + pts, MAX_SCORE);
+			game.scores[them] = Math.min(game.scores[them] + bonus, MAX_SCORE);
 			// Catch-up rule: a bullseye by a team that is still behind earns another turn.
 			round.extraTurn = pts === 4 && game.scores[me] < game.scores[them];
 			if (round.extraTurn) msg += ` · Still behind: ${game.names[me]} goes again`;
@@ -551,7 +552,9 @@ const playAd = (() => {
 	// Typed shuffle words and card numbers apply on Enter or when the box loses focus, never mid-typing.
 	const applySeed = from => {
 		const seed = normSeed($('seed').value) || randomSeed();
-		const card = Math.max(1, Math.floor(+$('cardNo').value) || 1);
+		const n = Math.floor(+$('cardNo').value);
+		if (Math.abs(n) === Infinity) return showSeed(); // keep the current card, as at startup
+		const card = Math.max(1, n || 1);
 		const seedChanged = seed !== game.seed;
 		if (!seedChanged && card === game.card) return showSeed();
 		game.seed = seed;
@@ -616,5 +619,6 @@ const playAd = (() => {
 	// A reload between Guess and New card: the same card comes back already scored.
 	if (saved.scored === true && saved.seed === game.seed && saved.card === game.card) {
 		Object.assign(round, { scored: true, extraTurn: saved.extraTurn === true });
+		save(); // startRound saved the card as unscored; write the restored flag back for the next reload
 	}
 })();
