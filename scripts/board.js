@@ -640,10 +640,12 @@ const playAd = (() => {
 	help.addEventListener('click', e => { if (e.target === help) help.close(); }); // click on the backdrop
 
 	// Another tab of this browser saved: take its state, so that this tab's next save doesn't write the old scores back over it.
+	// An event can arrive after a newer save (this tab's own included), so read the save as it is now, not the value the event carries.
 	addEventListener('storage', e => {
-		if (e.key !== STORE || !e.newValue) return; // another key, or a cleared save
+		if (e.key !== STORE) return; // another key
 		let s;
-		try { s = JSON.parse(e.newValue); } catch (err) { return; }
+		try { s = JSON.parse(localStorage.getItem(STORE)); } catch (err) { return; } // storage blocked or a damaged save
+		if (!s) return; // a cleared save
 		if (!s || typeof s !== 'object') return;
 		applying = true;
 		try {

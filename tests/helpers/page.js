@@ -60,7 +60,8 @@ function boot(store, search = '') {
 		$('commit').click();
 	}
 	// This page hears that another tab of the same browser saved: the browser sends a `storage` event with the new value.
-	const heardSave = () => (windowListeners.storage || []).forEach(fn => fn({ key: 'telewave.v2', newValue: store['telewave.v2'] }));
+	// `newValue` defaults to what the save holds now; pass an older save to play an event that arrives late.
+	const heardSave = (newValue = store['telewave.v2']) => (windowListeners.storage || []).forEach(fn => fn({ key: 'telewave.v2', newValue }));
 	// A pointer at (x, y) in the dial's own coordinates; `onHandle` is whether it lands on the cover's handle.
 	const pointer = (type, x, y, onHandle = false) => $('dial').fire(type, { button: 0, clientX: x, clientY: y, pointerId: 1, target: { closest: sel => (onHandle && sel === '#handle' ? {} : null) } });
 	return { $, saved, play, heardSave, pointer, store };

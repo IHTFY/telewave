@@ -192,6 +192,18 @@ test('a tab hearing a new game that picked the same shuffle word and card starts
 	assert.deepEqual(second.saved().scores, [4, 1]);
 });
 
+test('a late storage event does not undo a card this tab scored since', () => {
+	const store = { 'telewave.v2': save([0, 1]) };
+	const other = boot(store);
+	const mine = boot(store);
+	other.$('turn').click(); // the other tab saves a change (the turn)
+	const late = store['telewave.v2'];
+	mine.play(0, false); // this tab scores before hearing about it: 4 to 1
+	mine.heardSave(late);
+	mine.$('name0').fire('input', { target: { value: 'Red' } }); // any change saves this tab's state
+	assert.deepEqual(mine.saved().scores, [4, 1]);
+});
+
 test('a tap on the cover\'s handle moves the needle and leaves the cover shut', () => {
 	const page = boot({ 'telewave.v2': save([0, 1]) });
 	page.pointer('pointerdown', 650, 325, true); // on the handle, near the right rim
