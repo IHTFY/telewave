@@ -56,3 +56,36 @@ test('a shared link with a card number that is not finite starts at card 1', () 
 	const page = boot({}, '?shuffle=apple&card=1e999');
 	assert.equal(page.saved().card, 1);
 });
+
+test('a scored card stays scored across two reloads', () => {
+	const store = { 'telewave.v2': save([0, 1]) };
+	let page = boot(store);
+	page.play(0, false); // bullseye: team 1 goes from 0 to 4
+	assert.deepEqual(page.saved().scores, [4, 1]);
+	page = boot(store);
+	page = boot(store);
+	page.$('commit').click();
+	assert.match(page.$('score').textContent, /already scored this card/);
+	assert.deepEqual(page.saved().scores, [4, 1]);
+});
+
+test('a card number that is not finite leaves the board on the current card', () => {
+	for (const value of ['1e400', 'Infinity']) {
+		const page = boot({ 'telewave.v2': save([0, 1], { card: 3 }) });
+		page.$('seed').value = 'apple';
+		page.$('cardNo').value = value;
+		assert.doesNotThrow(() => page.$('cardNo').fire('change'));
+		assert.equal(page.saved().card, 3);
+		assert.equal(page.$('cardNo').value, 3);
+	}
+});
+
+test('scores above 100 survive a reload unchanged', () => {
+	const page = boot({ 'telewave.v2': save([102, 101]) });
+	assert.deepEqual(page.saved().scores, [102, 101]);
+});
+
+test('a saved team name is capped to the length of the name field', () => {
+	const page = boot({ 'telewave.v2': save([0, 1], { names: ['x'.repeat(10000), 'Team 2'] }) });
+	assert.equal(page.saved().names[0].length, 24);
+});
