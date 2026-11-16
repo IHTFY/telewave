@@ -161,6 +161,37 @@ test('a tab hearing that another tab started a new game leaves the results scree
 	assert.deepEqual(second.saved().scores, [0, 1]);
 });
 
+test('a tab showing a win hides it when another tab corrects the scores below 10', () => {
+	const store = { 'telewave.v2': save([8, 9]) };
+	const first = boot(store);
+	const second = boot(store);
+	first.play(5, true); // 11 to 10
+	second.heardSave();
+	assert.equal(second.$('winScreen').hidden, false);
+	store['telewave.v2'] = save([6, 9], { scored: true }); // the first tab fixes the scores
+	second.heardSave();
+	assert.equal(second.$('winScreen').hidden, true);
+	assert.deepEqual(second.saved().scores, [6, 9]);
+});
+
+test('a tab hearing a new game that picked the same shuffle word and card starts the round over', () => {
+	const store = { 'telewave.v2': save([8, 9]) };
+	const first = boot(store);
+	const second = boot(store);
+	first.play(5, true); // card 1 won, 11 to 10
+	second.heardSave();
+	assert.equal(second.$('winScreen').hidden, false);
+	const random = Math.random;
+	Math.random = () => 0; // the first shuffle word, apple: the same as the game just played
+	try { first.$('newGame').click(); } finally { Math.random = random; }
+	assert.equal(first.saved().seed, 'apple');
+	assert.equal(first.saved().card, 1);
+	second.heardSave();
+	assert.equal(second.$('winScreen').hidden, true);
+	second.play(0, false); // Guess must work again: a bullseye for team 1
+	assert.deepEqual(second.saved().scores, [4, 1]);
+});
+
 test('a tap on the cover\'s handle moves the needle and leaves the cover shut', () => {
 	const page = boot({ 'telewave.v2': save([0, 1]) });
 	page.pointer('pointerdown', 650, 325, true); // on the handle, near the right rim

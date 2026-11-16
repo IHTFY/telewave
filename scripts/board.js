@@ -652,12 +652,15 @@ const playAd = (() => {
 			pct.checked = s.pct !== false;
 			applyPct();
 			const seed = normSeed(s.seed || '') || game.seed, card = cardNumber(s.card);
+			// A card scored here that the save has as unscored is a new game that happened to deal the same word and card 1.
+			const rescinded = round.scored && s.scored !== true;
 			round.scored = false; // the turn passes with the save, not again here
-			if (seed !== game.seed || card !== game.card) {
+			if (seed !== game.seed || card !== game.card || rescinded) {
 				Object.assign(game, { seed, card });
 				startRound();
 			} else drawScores();
 			restoreScored({ ...s, seed, card });
+			if (!winner() && !$('winScreen').hidden) results.hide(); // the scores were corrected below a win
 		} finally {
 			applying = false;
 		}
