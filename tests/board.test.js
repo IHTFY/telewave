@@ -89,3 +89,144 @@ test('a saved team name is capped to the length of the name field', () => {
 	const page = boot({ 'telewave.v2': save([0, 1], { names: ['x'.repeat(10000), 'Team 2'] }) });
 	assert.equal(page.saved().names[0].length, 24);
 });
+
+test('a reload after a team won brings back the results screen', () => {
+	const store = { 'telewave.v2': save([8, 9]) };
+	let page = boot(store);
+	page.play(5, true); // 11 to 10
+	page = boot(store);
+	assert.equal(page.$('winScreen').hidden, false);
+	assert.match(page.$('winText').textContent, /Team 1 wins, 11 to 10/);
+	page.$('commit').click();
+	assert.match(page.$('score').textContent, /already scored this card/);
+	assert.deepEqual(page.saved().scores, [11, 10]);
+});
+
+test('a reload after a tie, or a score under 10, shows no results screen', () => {
+	let page = boot({ 'telewave.v2': save([7, 10]) });
+	page.play(5, false); // 10 to 10
+	assert.equal(boot(page.store).$('winScreen').hidden, true);
+	const store = { 'telewave.v2': save([0, 1]) };
+	page = boot(store);
+	page.play(0, false);
+	assert.equal(boot(store).$('winScreen').hidden, true);
+});
+
+test('a tab that missed another tab\'s card does not save its old scores over them', () => {
+	const store = { 'telewave.v2': save([0, 1]) };
+	const first = boot(store);
+	const second = boot(store);
+	first.play(0, false); // 4 to 1
+	second.heardSave();
+	second.$('turn').click(); // any change saves the second tab's state
+	assert.deepEqual(second.saved().scores, [4, 1]);
+});
+
+test('a tab hearing that another tab moved to the next card follows it without passing the turn again', () => {
+	const store = { 'telewave.v2': save([0, 1]) };
+	const first = boot(store);
+	const second = boot(store);
+	first.play(0, false);
+	first.$('new').click(); // card 2, team 2's turn
+	second.heardSave();
+	assert.equal(second.$('cardNo').value, 2);
+	assert.equal(second.$('word1').textContent, first.$('word1').textContent);
+	second.$('commit').click(); // team 2 guesses card 2 on the second tab
+	assert.equal(second.saved().turn, 1);
+	assert.equal(second.saved().card, 2);
+	assert.equal(second.saved().scores[0], 4);
+});
+
+test('a tab hearing that another tab won shows the results screen', () => {
+	const store = { 'telewave.v2': save([8, 9]) };
+	const first = boot(store);
+	const second = boot(store);
+	first.play(5, true);
+	second.heardSave();
+	assert.equal(second.$('winScreen').hidden, false);
+	assert.match(second.$('winText').textContent, /Team 1 wins, 11 to 10/);
+});
+
+test('a tab hearing that another tab started a new game leaves the results screen', () => {
+	const store = { 'telewave.v2': save([8, 9]) };
+	const first = boot(store);
+	const second = boot(store);
+	first.play(5, true);
+	second.heardSave();
+	first.$('newGame').click();
+	second.heardSave();
+	assert.equal(second.$('winScreen').hidden, true);
+	assert.equal(second.$('seed').value, first.$('seed').value);
+	second.$('turn').click(); // a change saves this tab's state: the new game's scores
+	assert.deepEqual(second.saved().scores, [0, 1]);
+});
+
+test('a tab showing a win hides it when another tab corrects the scores below 10', () => {
+	const store = { 'telewave.v2': save([8, 9]) };
+	const first = boot(store);
+	const second = boot(store);
+	first.play(5, true); // 11 to 10
+	second.heardSave();
+	assert.equal(second.$('winScreen').hidden, false);
+	store['telewave.v2'] = save([6, 9], { scored: true }); // the first tab fixes the scores
+	second.heardSave();
+	assert.equal(second.$('winScreen').hidden, true);
+	assert.deepEqual(second.saved().scores, [6, 9]);
+});
+
+test('a tab hearing a new game that picked the same shuffle word and card starts the round over', () => {
+	const store = { 'telewave.v2': save([8, 9]) };
+	const first = boot(store);
+	const second = boot(store);
+	first.play(5, true); // card 1 won, 11 to 10
+	second.heardSave();
+	assert.equal(second.$('winScreen').hidden, false);
+	const random = Math.random;
+	Math.random = () => 0; // the first shuffle word, apple: the same as the game just played
+	try { first.$('newGame').click(); } finally { Math.random = random; }
+	assert.equal(first.saved().seed, 'apple');
+	assert.equal(first.saved().card, 1);
+	second.heardSave();
+	assert.equal(second.$('winScreen').hidden, true);
+	second.play(0, false); // Guess must work again: a bullseye for team 1
+	assert.deepEqual(second.saved().scores, [4, 1]);
+});
+
+test('a late storage event does not undo a card this tab scored since', () => {
+	const store = { 'telewave.v2': save([0, 1]) };
+	const other = boot(store);
+	const mine = boot(store);
+	other.$('turn').click(); // the other tab saves a change (the turn)
+	const late = store['telewave.v2'];
+	mine.play(0, false); // this tab scores before hearing about it: 4 to 1
+	mine.heardSave(late);
+	mine.$('name0').fire('input', { target: { value: 'Red' } }); // any change saves this tab's state
+	assert.deepEqual(mine.saved().scores, [4, 1]);
+});
+
+test('a tap on the cover\'s handle moves the needle and leaves the cover shut', () => {
+	const page = boot({ 'telewave.v2': save([0, 1]) });
+	page.pointer('pointerdown', 650, 325, true); // on the handle, near the right rim
+	page.pointer('pointerup', 650, 325, true);
+	assert.equal(page.$('guessdisp').value, '99%');
+	assert.match(page.$('shade').attrs.transform, /^rotate\(0 /);
+});
+
+test('a drag on the handle opens the cover and leaves the needle', () => {
+	const page = boot({ 'telewave.v2': save([0, 1]) });
+	page.pointer('pointerdown', 650, 325, true);
+	page.pointer('pointermove', 600, 200, true);
+	page.pointer('pointermove', 380, 60, true); // the top of the dial: the cover is half open
+	page.pointer('pointerup', 380, 60, true);
+	assert.match(page.$('shade').attrs.transform, /^rotate\(-90 /);
+	assert.equal(page.$('guessdisp').value, '50%');
+});
+
+test('a tap on the dial away from the handle still moves the needle', () => {
+	const page = boot({ 'telewave.v2': save([0, 1]) });
+	page.pointer('pointerdown', 380, 60);
+	page.pointer('pointerup', 380, 60);
+	assert.equal(page.$('guessdisp').value, '50%');
+	page.pointer('pointerdown', 100, 250);
+	assert.notEqual(page.$('guessdisp').value, '50%');
+});

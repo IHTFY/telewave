@@ -193,6 +193,11 @@ button:focus-visible, input:focus-visible, a:focus-visible, .dial:focus-visible 
 /* dial */
 svg.dial { width: 100%; max-width: 720px; height: auto; display: block; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; border-radius: 12px; }
 svg.dial.locked { cursor: default; }
+/* On a wide window the dial is capped so the Guess button stays in the first screen. The button sits 289px below the
+   dial and the dial starts 132px down, so 440px leaves a margin. Phones and windows under 700px tall keep the full size. */
+@media (min-width: 641px) and (min-height: 700px) {
+  svg.dial { max-width: min(720px, calc((100vh - 440px) * 760 / 420)); }
+}
 .navy { fill: var(--navy); }
 .face { fill: var(--face); }
 .shade { fill: var(--shade); stroke: var(--shade-edge); stroke-width: 2; }
