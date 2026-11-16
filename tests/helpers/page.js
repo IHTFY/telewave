@@ -25,7 +25,13 @@ function stub(defaults = {}) {
 // `store` is the fake localStorage contents; it keeps what the game saves, so booting again is a reload.
 function boot(store, search = '') {
 	const els = new Map();
-	const $ = id => { if (!els.has(id)) els.set(id, stub({ id })); return els.get(id); };
+	// The dial maps a pointer straight to its own coordinates, and the cover and needle record what they are set to.
+	const special = {
+		dial: { createSVGPoint: () => ({ matrixTransform() { return { x: this.x, y: this.y }; } }), getScreenCTM: () => ({ inverse() {} }) },
+		shade: { attrs: {}, setAttribute(k, v) { this.attrs[k] = v; } }
+	};
+	const $ = id => { if (!els.has(id)) els.set(id, stub({ id, ...special[id] })); return els.get(id); };
+	const windowListeners = {};
 	const context = vm.createContext({
 		console, Math, JSON, URLSearchParams, Promise, String, Array, Object, Error, Date,
 		navigator: { onLine: false },
@@ -34,7 +40,7 @@ function boot(store, search = '') {
 		history: { replaceState() {} },
 		matchMedia: () => ({ matches: true }),
 		requestAnimationFrame: () => 1, cancelAnimationFrame() {}, setTimeout() {},
-		addEventListener() {}, innerWidth: 400,
+		addEventListener: (type, fn) => { (windowListeners[type] ??= []).push(fn); }, innerWidth: 400,
 		ResizeObserver: class { observe() {} },
 		window: { innerHeight: 800, scrollTo() {} },
 		document: { getElementById: $, createElement: () => stub(), body: stub(), head: stub(), documentElement: stub({ clientWidth: 400 }), addEventListener() {}, cookie: '' }
@@ -53,7 +59,11 @@ function boot(store, search = '') {
 		if (bet) $('gem' + (target < want ? 'L' : 'R')).click();
 		$('commit').click();
 	}
-	return { $, saved, play };
+	// This page hears that another tab of the same browser saved: the browser sends a `storage` event with the new value.
+	const heardSave = () => (windowListeners.storage || []).forEach(fn => fn({ key: 'telewave.v2', newValue: store['telewave.v2'] }));
+	// A pointer at (x, y) in the dial's own coordinates; `onHandle` is whether it lands on the cover's handle.
+	const pointer = (type, x, y, onHandle = false) => $('dial').fire(type, { button: 0, clientX: x, clientY: y, pointerId: 1, target: { closest: sel => (onHandle && sel === '#handle' ? {} : null) } });
+	return { $, saved, play, heardSave, pointer, store };
 }
 
 const save = (scores, extra = {}) => JSON.stringify({ scores, names: ['Team 1', 'Team 2'], turn: 0, pct: true, seed: 'apple', card: 1, ...extra });

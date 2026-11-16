@@ -175,7 +175,9 @@ const playAd = (() => {
 	// ---------- storage (optional, per browser) ----------
 	const STORE = 'telewave.v2';
 	const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { return {}; } };
+	let applying = false; // true while this tab takes up another tab's save, which it must not write back
 	const save = () => {
+		if (applying) return;
 		try { localStorage.setItem(STORE, JSON.stringify({ scores: game.scores, names: game.names, turn: game.turn, pct: $('percentages').checked, seed: game.seed, card: game.card, scored: round.scored, extraTurn: round.extraTurn })); } catch (e) { /* storage unavailable */ }
 	};
 
@@ -252,10 +254,14 @@ const playAd = (() => {
 
 	// ---------- state ----------
 	const saved = load();
+	const fromSave = s => ({
+		scores: Array.isArray(s.scores) && s.scores.length === 2 ? s.scores.map(n => clamp(+n || 0, 0, MAX_SCORE)) : [0, 1], // team 2 starts at 1, as in the rules
+		names: Array.isArray(s.names) && s.names.length === 2 ? s.names.map(n => String(n).slice(0, 24)) : ['Team 1', 'Team 2'],
+		turn: s.turn === 1 ? 1 : 0,
+	});
+	const cardNumber = v => { const n = Math.floor(+v); return Number.isFinite(n) ? Math.max(1, n) : 1; };
 	const game = {
-		scores: Array.isArray(saved.scores) && saved.scores.length === 2 ? saved.scores.map(n => clamp(+n || 0, 0, MAX_SCORE)) : [0, 1], // team 2 starts at 1, as in the rules
-		names: Array.isArray(saved.names) && saved.names.length === 2 ? saved.names.map(n => String(n).slice(0, 24)) : ['Team 1', 'Team 2'],
-		turn: saved.turn === 1 ? 1 : 0,
+		...fromSave(saved),
 		seed: '', card: 1, // one seed per game shuffles the deck; card counts through it
 	};
 	const round = { target: 50, guess: 50, gem: null, revealed: false, scored: false, extraTurn: false };
@@ -433,6 +439,26 @@ const playAd = (() => {
 
 	const points = d => d <= BAND / 2 ? 4 : d <= BAND * 1.5 ? 3 : d <= BAND * 2.5 ? 2 : 0;
 
+	// The result line once a team has 10 or more and leads, otherwise null (a tie goes on to sudden death).
+	function winner() {
+		const [a, b] = game.scores;
+		return (a >= 10 || b >= 10) && a !== b ? `${game.names[a > b ? 0 : 1]} wins, ${Math.max(a, b)} to ${Math.min(a, b)}!` : null;
+	}
+
+	function showWin(msg) {
+		showSeedBox(false);
+		results.show(msg, `${game.seed}/${game.card}`);
+	}
+
+	// Puts back what a save says about the card on the table: that it was scored, and the results screen if a team has won.
+	function restoreScored(s) {
+		if (!(s.scored === true && s.seed === game.seed && s.card === game.card)) return;
+		Object.assign(round, { scored: true, extraTurn: s.extraTurn === true });
+		const won = winner();
+		if (won) showWin(won);
+		save(); // startRound saved the card as unscored; write the restored flag back for the next reload
+	}
+
 	function guess() {
 		if (round.revealed) return;
 		round.revealed = true;
@@ -459,8 +485,9 @@ const playAd = (() => {
 			if (round.extraTurn) msg += ` · Still behind: ${game.names[me]} goes again`;
 			const [a, b] = game.scores;
 			if (a >= 10 || b >= 10) {
-				msg = a === b ? `${msg} · Tied at ${a}: sudden death!` : `${game.names[a > b ? 0 : 1]} wins, ${Math.max(a, b)} to ${Math.min(a, b)}!`;
-				if (a !== b) { showSeedBox(false); results.show(msg, `${game.seed}/${game.card}`); }
+				const won = winner();
+				msg = won ?? `${msg} · Tied at ${a}: sudden death!`;
+				if (won) showWin(won);
 			}
 			drawScores();
 		}
@@ -473,18 +500,21 @@ const playAd = (() => {
 	}
 
 	// ---------- dial interaction ----------
-	let dragging = null;
+	// 'needle' or 'shade' while one is dragged; 'handle' from a press on the cover's handle until it moves, since the
+	// handle reaches in past the rim and a tap there is a guess, not a grab.
+	let dragging = null, pressAt = null;
+	const TAP_SLOP = 14; // dial units a press on the handle may move and still count as a tap
+	const aim = p => { round.guess = toValue(p.x, p.y); drawNeedle(); };
 	svg.addEventListener('pointerdown', e => {
 		if (e.button > 0) return;
 		const p = svgPoint(e);
-		if (e.target.closest('#handle')) dragging = 'shade';
+		if (e.target.closest('#handle')) { dragging = 'handle'; pressAt = p; }
 		else if (!round.revealed && p.y <= CY + 20) {
 			dragging = 'needle';
-			round.guess = toValue(p.x, p.y);
-			drawNeedle();
+			aim(p);
 		}
 		if (dragging) {
-			cancelAnimationFrame(raf);
+			if (dragging !== 'handle') cancelAnimationFrame(raf);
 			svg.setPointerCapture(e.pointerId);
 			e.preventDefault();
 		}
@@ -492,6 +522,11 @@ const playAd = (() => {
 	svg.addEventListener('pointermove', e => {
 		if (!dragging) return;
 		const p = svgPoint(e);
+		if (dragging === 'handle') {
+			if (Math.hypot(p.x - pressAt.x, p.y - pressAt.y) < TAP_SLOP) return;
+			dragging = 'shade';
+			cancelAnimationFrame(raf);
+		}
 		if (dragging === 'needle') {
 			round.guess = toValue(p.x, p.y);
 			drawNeedle();
@@ -500,9 +535,11 @@ const playAd = (() => {
 			drawShade();
 		}
 	});
-	const endDrag = () => { dragging = null; };
-	svg.addEventListener('pointerup', endDrag);
-	svg.addEventListener('pointercancel', endDrag);
+	svg.addEventListener('pointerup', () => {
+		if (dragging === 'handle' && !round.revealed && pressAt.y <= CY + 20) aim(pressAt); // the press never moved: a tap
+		dragging = null;
+	});
+	svg.addEventListener('pointercancel', () => { dragging = null; });
 	svg.addEventListener('keydown', e => {
 		if (round.revealed) return;
 		const d = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1, PageDown: -10, PageUp: 10, Home: -100, End: 100 }[e.key];
@@ -602,6 +639,30 @@ const playAd = (() => {
 	$('helpClose').addEventListener('click', () => help.close());
 	help.addEventListener('click', e => { if (e.target === help) help.close(); }); // click on the backdrop
 
+	// Another tab of this browser saved: take its state, so that this tab's next save doesn't write the old scores back over it.
+	addEventListener('storage', e => {
+		if (e.key !== STORE || !e.newValue) return; // another key, or a cleared save
+		let s;
+		try { s = JSON.parse(e.newValue); } catch (err) { return; }
+		if (!s || typeof s !== 'object') return;
+		applying = true;
+		try {
+			Object.assign(game, fromSave(s));
+			[0, 1].forEach(i => { $('name' + i).value = game.names[i]; });
+			pct.checked = s.pct !== false;
+			applyPct();
+			const seed = normSeed(s.seed || '') || game.seed, card = cardNumber(s.card);
+			round.scored = false; // the turn passes with the save, not again here
+			if (seed !== game.seed || card !== game.card) {
+				Object.assign(game, { seed, card });
+				startRound();
+			} else drawScores();
+			restoreScored({ ...s, seed, card });
+		} finally {
+			applying = false;
+		}
+	});
+
 	// ---------- boot ----------
 	const params = new URLSearchParams(location.search);
 	const linkSeed = normSeed(params.get('shuffle') || params.get('seed') || ''); // ?seed= was the old name
@@ -610,15 +671,11 @@ const playAd = (() => {
 	winAd.loadForBuyer();
 	showSeedBox(!!linkSeed); // arriving from a shared link: show what was shared
 	game.seed = linkSeed || normSeed(saved.seed || '') || randomSeed();
-	const card = Math.floor(+(linkSeed ? params.get('card') : saved.card));
-	game.card = Number.isFinite(card) ? Math.max(1, card) : 1;
+	game.card = cardNumber(linkSeed ? params.get('card') : saved.card);
 	if (saved.pct === false) pct.checked = false;
 	applyPct();
 	drawShade();
 	startRound();
-	// A reload between Guess and New card: the same card comes back already scored.
-	if (saved.scored === true && saved.seed === game.seed && saved.card === game.card) {
-		Object.assign(round, { scored: true, extraTurn: saved.extraTurn === true });
-		save(); // startRound saved the card as unscored; write the restored flag back for the next reload
-	}
+	// A reload between Guess and New card: the same card comes back already scored, and a win comes back as the results screen.
+	restoreScored(saved);
 })();
