@@ -5,15 +5,18 @@
 // browser idle. A visitor who may have bought ad-free gets the loader at startup instead
 // (loadForBuyer), so it can hide the slot before it shows. The slot below the board hides
 // again as soon as play goes on. The results screen that holds it replaces the board, so the box, the result
-// and the buttons are in view together; it picks the biggest of three sizes that fits the window.
+// and the buttons are in view together; it picks the biggest of three sizes that fits the window, and a window
+// that shrinks while the result is open moves it to a smaller size and a new ad, since the old one no longer fits.
 const winAd = (() => {
 	const LOADER = 'https://ihtfy.com/ads/v1.js';
-	// The sizes the box may take, biggest first, as [data-ad-size, height]: the first that fits the room
-	// between the box's top and the bottom of the window.
-	const SIZES = [['300x250', 250], ['320x100', 100], ['320x50', 50]];
-	const pickSize = room => (SIZES.find(([, height]) => height <= room) ?? SIZES.at(-1))[0];
+	// The sizes the box may take, biggest first, as [data-ad-size, width, height]: the first that fits the room
+	// between the box's top and the bottom of the window, and the width of the window.
+	const SIZES = [['300x250', 300, 250], ['320x100', 320, 100], ['320x50', 320, 50]];
+	const pickSize = (room, width = Infinity) => (SIZES.find(([, w, h]) => h <= room && w <= width) ?? SIZES.at(-1))[0];
 	const $ = id => document.getElementById(id);
+	const fitSize = box => pickSize(window.innerHeight - box.getBoundingClientRect().top, document.documentElement.clientWidth);
 	let loader = null;
+	let open = null; // the size and key of the ad in the open result, or null
 
 	const load = () => (loader ??= new Promise((resolve, reject) => {
 		const script = document.createElement('script');
@@ -43,7 +46,8 @@ const winAd = (() => {
 		aside.hidden = false;
 		const box = $('winAdBox');
 		// Sized before any ad comes, so nothing shifts when it fills; offline the empty box keeps that size too.
-		box.dataset.adSize = pickSize(window.innerHeight - box.getBoundingClientRect().top);
+		box.dataset.adSize = fitSize(box);
+		open = { size: box.dataset.adSize, key };
 		if (!navigator.onLine) return;
 		const ready = load();
 		// hide() swaps the box out; a box removed while the loader was on its way gets no ad.
@@ -55,9 +59,30 @@ const winAd = (() => {
 		const aside = $('winAd');
 		if (!aside || aside.hidden) return;
 		aside.hidden = true;
+		open = null;
 		const box = $('winAdBox');
 		box.replaceWith(box.cloneNode(false));
 	}
+
+	// A window that shrinks under an open result takes the box to a size that fits. The ad already in it is the
+	// old size, and its key is spent, so the smaller box asks for its own ad. Growing keeps the smaller one.
+	function fit() {
+		const aside = $('winAd');
+		if (!open || !aside || aside.hidden) return;
+		const size = fitSize($('winAdBox'));
+		const sizes = SIZES.map(([name]) => name);
+		if (sizes.indexOf(size) <= sizes.indexOf(open.size)) return;
+		const box = $('winAdBox');
+		const fresh = box.cloneNode(false);
+		box.replaceWith(fresh);
+		fresh.dataset.adSize = size;
+		const key = `${open.key}/${size}`;
+		open = { size, key };
+		if (!navigator.onLine) return;
+		load().then(() => fresh.isConnected && window.ihtfyAds.show(fresh, key), () => {});
+	}
+	addEventListener('resize', fit);
+	document.fonts?.ready.then(fit); // the fonts change how the text wraps, and so where the box starts
 
 	return { show, hide, loadForBuyer, load, pickSize };
 })();

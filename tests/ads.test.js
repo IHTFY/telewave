@@ -333,6 +333,50 @@ test('the results box is sized from the window before any ad is asked for, offli
 	}
 });
 
+test('a window narrower than a size rules it out, so no box is wider than the window', () => {
+	const h = harness();
+	assert.equal(h.ads.pickSize(250, 320), '300x250');
+	assert.equal(h.ads.pickSize(249, 320), '320x100');
+	assert.equal(h.ads.pickSize(249, 319), '320x50'); // nothing narrower than 320 holds a short size, so the smallest stays
+	assert.equal(h.ads.pickSize(250, 299), '320x50');
+});
+
+test('a window that shrinks under an open result gets a smaller box and its own ad; growing keeps it', async () => {
+	const h = harness({ innerHeight: 640 });
+	h.ads.show('seed/12');
+	h.added[0].listeners.load();
+	await settle();
+	const first = h.els.winAdBox;
+	assert.equal(first.dataset.adSize, '300x250');
+	h.input('resize'); // same size: nothing changes
+	assert.equal(h.els.winAdBox, first);
+	h.window.innerHeight = 400;
+	h.input('resize');
+	await settle();
+	const second = h.els.winAdBox;
+	assert.notEqual(second, first);
+	assert.equal(first.isConnected, false);
+	assert.equal(second.dataset.adSize, '320x100');
+	h.window.innerHeight = 300;
+	h.input('resize');
+	await settle();
+	assert.equal(h.els.winAdBox.dataset.adSize, '320x50');
+	h.window.innerHeight = 900;
+	h.input('resize');
+	assert.equal(h.els.winAdBox.dataset.adSize, '320x50');
+	assert.deepEqual(h.shown.map(([, key]) => key), ['seed/12', 'seed/12/320x100', 'seed/12/320x100/320x50']);
+	h.ads.hide();
+	h.window.innerHeight = 100;
+	h.input('resize');
+	assert.equal(h.shown.length, 3); // a closed result asks for nothing
+});
+
+test('on a phone the results box may spill into the page gutters, so a 320px box fits a 320px window', () => {
+	const phone = css.slice(css.indexOf('@media (max-width: 640px) {\n  .win-ad {'));
+	assert.match(phone.slice(0, phone.indexOf('\n}')), /\.win-ad-box \{ margin-inline: -16px; \}/);
+	assert.match(css, /body \{[^}]*padding-inline: 16px;/);
+});
+
 test('play gets no ad: nothing loads or shows until the results screen appears, and it hides on play', async () => {
 	const h = harness();
 	h.results.hide();

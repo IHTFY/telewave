@@ -325,6 +325,9 @@ svg.dial.locked { cursor: default; }
 .win-ad-box[data-ad-size="320x50"] { width: 320px; height: 50px; }
 @media (max-width: 640px) {
   .win-ad { margin-top: 34px; }
+  /* A 320px box is wider than the page minus its 16px gutters on a 320px phone. Giving it back the gutters as
+     negative margin lets the box spill into them, centered, instead of widening the page and pushing the result off screen. */
+  .win-ad-box { margin-inline: -16px; }
 }
 
 /* ---------- ad beside the game ---------- */
