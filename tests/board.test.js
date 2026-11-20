@@ -230,3 +230,25 @@ test('a tap on the dial away from the handle still moves the needle', () => {
 	page.pointer('pointerdown', 100, 250);
 	assert.notEqual(page.$('guessdisp').value, '50%');
 });
+
+test('a failed read on startup keeps the stored match, and a new game replaces it', () => {
+	const original = save([8, 7]);
+	const disk = { 'telewave.v2': original };
+	let fail = true;
+	const page = boot(new Proxy(disk, {
+		get(target, name) {
+			if (name === 'telewave.v2' && fail) { fail = false; throw Error('read unavailable'); }
+			return target[name];
+		}
+	}));
+	page.$('name0').fire('input', { target: { value: 'Owls' } });
+	page.$('percentages').fire('change');
+	assert.equal(disk['telewave.v2'], original);
+	page.$('newGame').click();
+	assert.deepEqual(JSON.parse(disk['telewave.v2']).scores, [0, 1]);
+});
+
+test('empty or damaged storage still saves on the first visit', () => {
+	assert.deepEqual(boot({}).saved().scores, [0, 1]);
+	assert.deepEqual(boot({ 'telewave.v2': '{not json' }).saved().scores, [0, 1]);
+});
