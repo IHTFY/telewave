@@ -276,3 +276,9 @@ test('the Shuffle fields opt out of form restoration, so Back cannot restore an 
 	const html = readFileSync(join(__dirname, '../index.html'), 'utf8');
 	for (const id of ['seed', 'cardNo']) assert.match(html, new RegExp(`<input[^>]* id="${id}"[^>]* autocomplete="off"`), id);
 });
+
+test('the Shuffle panel hangs from the whole header, so a wrapped menu cannot push it off the left edge', () => {
+	const css = readFileSync(join(__dirname, '../styles/styles.css'), 'utf8');
+	assert.match(css, /#header \{ position: relative;/);
+	assert.doesNotMatch(css, /\.pop-wrap \{ position: relative/);
+});
