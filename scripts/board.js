@@ -586,7 +586,8 @@ const playAd = (() => {
 	const peekOn = e => { e.preventDefault(); animateShade(180); };
 	const peekOff = () => { if (!round.revealed) animateShade(0); };
 	peek.addEventListener('pointerdown', peekOn);
-	['pointerup', 'pointerleave', 'pointercancel'].forEach(t => peek.addEventListener(t, peekOff));
+	// blur: a key held down when Tab moves focus away sends its release to the next control, not to this one.
+	['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach(t => peek.addEventListener(t, peekOff));
 	peek.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) peekOn(e); });
 	peek.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') peekOff(); });
 	peek.addEventListener('contextmenu', e => e.preventDefault());

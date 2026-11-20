@@ -252,3 +252,20 @@ test('empty or damaged storage still saves on the first visit', () => {
 	assert.deepEqual(boot({}).saved().scores, [0, 1]);
 	assert.deepEqual(boot({ 'telewave.v2': '{not json' }).saved().scores, [0, 1]);
 });
+
+test('moving focus off Hold to peek while its key is down closes the cover', () => {
+	for (const key of [' ', 'Enter']) {
+		const page = boot({ 'telewave.v2': save([0, 1]) });
+		page.$('reveal').fire('keydown', { key });
+		assert.match(page.$('shade').attrs.transform, /^rotate\(-180 /);
+		page.$('reveal').fire('blur'); // Tab to Guess; the key's release goes to Guess
+		assert.match(page.$('shade').attrs.transform, /^rotate\(0 /, key);
+	}
+});
+
+test('losing focus after Guess leaves the scored card uncovered', () => {
+	const page = boot({ 'telewave.v2': save([0, 1]) });
+	page.play(0, false);
+	page.$('reveal').fire('blur');
+	assert.match(page.$('shade').attrs.transform, /^rotate\(-180 /);
+});
