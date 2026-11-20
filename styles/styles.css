@@ -64,11 +64,11 @@ button:focus-visible, input:focus-visible, a:focus-visible, .dial:focus-visible 
 }
 
 /* ---------- header ---------- */
-#header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+/* The header is what the Shuffle panel hangs from, so a wrapped menu cannot push the panel off the left edge. */
+#header { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
 #header h1 { font: 600 1.6rem var(--display); margin: 0 auto 0 0; letter-spacing: .02em; }
 .menu { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
 .menu [aria-expanded="true"] { color: var(--mint); }
-.pop-wrap { position: relative; }
 .popup {
   position: absolute; top: calc(100% + 10px); right: 0; z-index: 40; width: min(300px, calc(100vw - 32px));
   display: grid; gap: 10px; padding: 14px; border-radius: 12px;
