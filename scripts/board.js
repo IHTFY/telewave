@@ -174,10 +174,17 @@ const playAd = (() => {
 
 	// ---------- storage (optional, per browser) ----------
 	const STORE = 'telewave.v2';
-	const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { return {}; } };
+	// A read that throws is not an empty save: the stored match may still be there, so this tab plays in memory
+	// and writes nothing until a deliberate new game replaces it.
+	let readFailed = false;
+	const load = () => {
+		let raw = null;
+		try { raw = localStorage.getItem(STORE); } catch (e) { readFailed = true; } // a damaged save is lost either way; an unreadable one may come back
+		try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+	};
 	let applying = false; // true while this tab takes up another tab's save, which it must not write back
 	const save = () => {
-		if (applying) return;
+		if (applying || readFailed) return;
 		try { localStorage.setItem(STORE, JSON.stringify({ scores: game.scores, names: game.names, turn: game.turn, pct: $('percentages').checked, seed: game.seed, card: game.card, scored: round.scored, extraTurn: round.extraTurn })); } catch (e) { /* storage unavailable */ }
 	};
 
@@ -572,6 +579,7 @@ const playAd = (() => {
 	}));
 	$('turn').addEventListener('click', () => { game.turn = 1 - game.turn; drawScores(); });
 	$('newGame').addEventListener('click', () => {
+		readFailed = false;
 		game.scores = [0, 1];
 		game.turn = 0;
 		round.scored = false;
