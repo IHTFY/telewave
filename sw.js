@@ -1,18 +1,19 @@
 /* Frequency service worker.
-   Offline: every app file is precached on install, and the game's two Google Fonts are cached too.
+   Offline: every app file is precached on install, the two fonts included (they are served from this site).
    Freshness: same-origin files are fetched network-first (cache is only the offline
    fallback), so a stale copy is never served while online. A changed sw.js installs
    as a waiting worker and the page offers a reload (see the script in index.html).
    Bump VERSION when you change the precache list; old caches are deleted on activate. */
-const VERSION = 'v8';
+const VERSION = 'v9';
 const APP = `telewave-app-${VERSION}`;
-const FONTS = 'telewave-fonts';
 const NETWORK_TIMEOUT = 4000;
 
 const PRECACHE = [
 	'./',
 	'index.html',
-	'styles/styles.css?v=2.5',
+	'styles/styles.css?v=2.6',
+	'fonts/fredoka-latin-wght-normal.woff2',
+	'fonts/karla-latin-wght-normal.woff2',
 	'scripts/random.js',
 	'scripts/data.js',
 	'scripts/board.js',
@@ -24,7 +25,6 @@ const PRECACHE = [
 	'icons/apple-touch-icon.png',
 	'icons/favicon-32.png'
 ];
-const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;600;700&display=swap';
 
 self.addEventListener('install', event => {
 	event.waitUntil((async () => {
@@ -35,22 +35,13 @@ self.addEventListener('install', event => {
 			if (!res.ok) throw new Error(`precache failed: ${url}`);
 			await app.put(url, res);
 		}));
-		// Fonts are best-effort: the game still works offline with fallback fonts.
-		try {
-			const fonts = await caches.open(FONTS);
-			const cssRes = await fetch(FONT_CSS);
-			const css = await cssRes.clone().text();
-			await fonts.put(FONT_CSS, cssRes);
-			const urls = [...css.matchAll(/url\((https:[^)]+)\)/g)].map(m => m[1]);
-			await Promise.all(urls.map(u => fonts.add(u)));
-		} catch (e) { /* offline during install or blocked */ }
 		// No skipWaiting here: the page asks for it so an update never swaps files mid-game.
 	})());
 });
 
 self.addEventListener('activate', event => {
 	event.waitUntil((async () => {
-		const keep = new Set([APP, FONTS]);
+		const keep = new Set([APP]); // also drops the old telewave-fonts cache
 		for (const key of await caches.keys()) if (!keep.has(key)) await caches.delete(key);
 		await self.clients.claim();
 	})());
@@ -67,14 +58,10 @@ self.addEventListener('fetch', event => {
 
 	if (url.origin === location.origin) {
 		event.respondWith(networkFirst(req, url));
-	} else if (req.url === FONT_CSS || appFontFile(url)) {
-		event.respondWith(staleWhileRevalidate(req));
 	}
 	// Anything else goes straight to the network, never through a cache: the ad loader
 	// (ihtfy.com/ads/), AdSense, and Google's consent message, including the fonts it loads.
 });
-
-const appFontFile = url => url.hostname === 'fonts.gstatic.com' && /^\/s\/(fredoka|karla)\//.test(url.pathname);
 
 async function networkFirst(req, url) {
 	const cache = await caches.open(APP);
@@ -92,12 +79,4 @@ async function networkFirst(req, url) {
 		if (hit) return hit;
 		throw e;
 	}
-}
-
-async function staleWhileRevalidate(req) {
-	const cache = await caches.open(FONTS);
-	const hit = await cache.match(req);
-	const refresh = fetch(req).then(res => { if (res.ok) cache.put(req, res.clone()); return res; });
-	if (hit) { refresh.catch(() => {}); return hit; }
-	return refresh;
 }

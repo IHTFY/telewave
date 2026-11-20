@@ -20,14 +20,16 @@ function fetchHandler() {
 	};
 }
 
-const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Karla:wght@400;600;700&display=swap';
-
 test('the game and its own fonts go through the worker', () => {
 	const answers = fetchHandler();
 	assert.equal(answers('https://frequency.ihtfy.com/scripts/board.js'), true);
-	assert.equal(answers(FONT_CSS), true);
-	assert.equal(answers('https://fonts.gstatic.com/s/fredoka/v14/a.woff2'), true);
-	assert.equal(answers('https://fonts.gstatic.com/s/karla/v31/b.woff2'), true);
+	assert.equal(answers('https://frequency.ihtfy.com/fonts/karla-latin-wght-normal.woff2'), true);
+});
+
+test('the page, stylesheet and worker name no font host, and the worker precaches the fonts', () => {
+	const read = f => readFileSync(join(__dirname, '..', f), 'utf8');
+	for (const f of ['index.html', 'styles/styles.css', 'sw.js']) assert.doesNotMatch(read(f), /fonts\.(googleapis|gstatic)\.com/, f);
+	for (const font of read('styles/styles.css').match(/fonts\/[\w-]+\.woff2/g)) assert.ok(read('sw.js').includes(`'${font}'`), font);
 });
 
 test('ad, consent and other third-party requests pass straight to the network', () => {
@@ -42,7 +44,7 @@ test('ad, consent and other third-party requests pass straight to the network', 
 		'https://www.google.com/recaptcha/api2/aframe',
 		'https://www.gstatic.com/images/x.png',
 		'https://www.googleadservices.com/pagead/conversion.js',
-		// Fonts the consent message asks for are not the game's.
+		// Fonts the consent message asks for are not the game's, and the game asks for none.
 		'https://fonts.googleapis.com/css2?family=Google+Sans',
 		'https://fonts.gstatic.com/s/googlesans/v1/c.woff2'
 	]) assert.equal(answers(url), false, url);
