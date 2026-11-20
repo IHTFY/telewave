@@ -2,6 +2,8 @@
 // Plays real cards through the game scripts in a fake page.
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
 const { boot, save } = require('./helpers/page.js');
 
 test('the higher total wins outright when a card takes both teams past 10', () => {
@@ -268,4 +270,9 @@ test('losing focus after Guess leaves the scored card uncovered', () => {
 	page.play(0, false);
 	page.$('reveal').fire('blur');
 	assert.match(page.$('shade').attrs.transform, /^rotate\(-180 /);
+});
+
+test('the Shuffle fields opt out of form restoration, so Back cannot restore an old card number', () => {
+	const html = readFileSync(join(__dirname, '../index.html'), 'utf8');
+	for (const id of ['seed', 'cardNo']) assert.match(html, new RegExp(`<input[^>]* id="${id}"[^>]* autocomplete="off"`), id);
 });
