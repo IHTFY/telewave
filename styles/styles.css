@@ -258,8 +258,10 @@ svg.dial.locked { cursor: default; }
 .track.active { background: rgba(255, 255, 255, .12); box-shadow: 0 0 0 2px var(--team-color); }
 .team-name {
   width: 100%; padding: 2px; border: 0; border-radius: 6px; background: none; color: var(--paper);
-  font: 600 .85rem var(--display); text-align: center; text-overflow: ellipsis;
+  font: 600 .85rem var(--display); text-align: center; text-overflow: ellipsis; transition: background-color .3s;
 }
+/* The active team's lighter track would leave the name at 3.9:1; a faint dark plate behind it brings it to 5:1. */
+.track.active .team-name { background: rgba(16, 40, 80, .2); }
 .rail {
   position: relative; width: 56px; padding: 8px 0; display: grid; gap: 4px; border-radius: 14px;
   background: var(--tray-lo); box-shadow: inset 0 3px 6px rgba(0, 0, 0, .35);
@@ -267,7 +269,7 @@ svg.dial.locked { cursor: default; }
 .slot {
   height: 30px; padding: 0; border: 0; background: none; cursor: pointer;
   display: grid; grid-template-columns: 18px 1fr; align-items: center;
-  color: rgba(255, 255, 255, .6); font: 700 .72rem var(--body); font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, .7); font: 700 .72rem var(--body); font-variant-numeric: tabular-nums;
 }
 .slot::after {
   content: ""; justify-self: center; width: 22px; height: 7px; border-radius: 4px;
@@ -303,7 +305,7 @@ svg.dial.locked { cursor: default; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .head, .gemslot svg, .turn, .track, .switch-track, .switch-knob { transition: none; }
+  .head, .gemslot svg, .turn, .track, .team-name, .switch-track, .switch-knob { transition: none; }
   .popup.applied { animation: none; }
   .turn-dot::before { animation: none; }
 }
