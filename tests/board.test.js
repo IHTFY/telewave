@@ -303,3 +303,36 @@ test('the Shuffle panel hangs from the whole header, so a wrapped menu cannot pu
 	assert.match(css, /#header \{ position: relative;/);
 	assert.doesNotMatch(css, /\.pop-wrap \{ position: relative/);
 });
+
+// ---------- accessibility ----------
+// WCAG contrast of text over a background, from the colors written in the stylesheet.
+const channel = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+const luminance = ([r, g, b]) => 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+const contrast = (a, b) => { const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05); };
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const over = ([r, g, b], alpha, base) => [r, g, b].map((c, i) => alpha * c + (1 - alpha) * base[i]);
+const cssVar = name => hex(readFileSync(join(__dirname, '../styles/styles.css'), 'utf8').match(new RegExp(`--${name}: (#[0-9a-f]{6})`))[1]);
+const stylesheet = readFileSync(join(__dirname, '../styles/styles.css'), 'utf8');
+const rgba = rule => rule.match(/rgba\((\d+), (\d+), (\d+), ([.\d]+)\)/).slice(1).map(Number);
+
+test('slot numbers read at 4.5:1 or better on the rail', () => {
+	const [r, g, b, alpha] = rgba(stylesheet.match(/\.slot \{[^}]*color: (rgba\([^)]*\))/)[1]);
+	assert.ok(contrast(over([r, g, b], alpha, cssVar('tray-lo')), cssVar('tray-lo')) >= 4.5);
+});
+
+test('team names read at 4.5:1 or better on the board tray and on the active team\'s lighter track', () => {
+	const paper = cssVar('paper'), tray = cssVar('tray');
+	const [wr, wg, wb, wa] = rgba(stylesheet.match(/\.track\.active \{ background: (rgba\([^)]*\))/)[1]);
+	const active = over([wr, wg, wb], wa, tray);
+	const [pr, pg, pb, pa] = rgba(stylesheet.match(/\.track\.active \.team-name \{ background: (rgba\([^)]*\))/)[1]);
+	assert.ok(contrast(paper, tray) >= 4.5);
+	assert.ok(contrast(paper, over([pr, pg, pb], pa, active)) >= 4.5);
+});
+
+test('the play area sits in a main landmark, which holds the page\'s one h1 and the results screen', () => {
+	const html = readFileSync(join(__dirname, '../index.html'), 'utf8');
+	assert.equal(html.match(/<main[ >]/g).length, 1);
+	const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'));
+	for (const marker of ['<h1>', 'class="board"', 'id="winScreen"']) assert.ok(main.includes(marker), marker);
+	assert.match(main, /^<main class="wrap">/); // the script and the stylesheet mark the win on this element
+});
