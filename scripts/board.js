@@ -291,7 +291,8 @@ const playAd = (() => {
 		names: Array.isArray(s.names) && s.names.length === 2 ? s.names.map(n => String(n).slice(0, 24)) : ['Team 1', 'Team 2'],
 		turn: s.turn === 1 ? 1 : 0,
 	});
-	const cardNumber = v => { const n = Math.floor(+v); return Number.isFinite(n) ? Math.max(1, n) : 1; };
+	const MAX_CARD = Number.MAX_SAFE_INTEGER - 1; // past this, adding one to a card number can leave it unchanged
+	const cardNumber = v => { const n = Math.floor(+v); return n <= MAX_CARD ? Math.max(1, n) : 1; }; // NaN and too large both fall to 1
 	const game = {
 		...fromSave(saved),
 		seed: '', card: 1, // one seed per game shuffles the deck; card counts through it
@@ -527,7 +528,7 @@ const playAd = (() => {
 	}
 
 	function nextCard() {
-		game.card++;
+		game.card = game.card >= MAX_CARD ? 1 : game.card + 1;
 		startRound();
 	}
 
@@ -624,7 +625,7 @@ const playAd = (() => {
 	const applySeed = from => {
 		const seed = normSeed($('seed').value) || randomSeed();
 		const n = Math.floor(+$('cardNo').value);
-		if (Math.abs(n) === Infinity) return showSeed(); // keep the current card, as at startup
+		if (Math.abs(n) > MAX_CARD) return showSeed(); // keep the current card, as at startup
 		const card = Math.max(1, n || 1);
 		const seedChanged = seed !== game.seed;
 		if (!seedChanged && card === game.card) return showSeed();

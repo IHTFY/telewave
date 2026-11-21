@@ -82,6 +82,27 @@ test('a card number that is not finite leaves the board on the current card', ()
 	}
 });
 
+test('a card number too large to add one to is not kept, so New card still advances', () => {
+	const linked = boot({}, '?shuffle=apple&card=1e20');
+	assert.equal(linked.saved().card, 1);
+	linked.$('new').click();
+	assert.equal(linked.saved().card, 2);
+	const typed = boot({ 'telewave.v2': save([0, 1], { card: 3 }) });
+	typed.$('seed').value = 'apple';
+	typed.$('cardNo').value = '1e20';
+	typed.$('cardNo').fire('change');
+	assert.equal(typed.saved().card, 3);
+	typed.$('new').click();
+	assert.equal(typed.saved().card, 4);
+});
+
+test('New card from the highest card number wraps to card 1', () => {
+	const page = boot({}, `?shuffle=apple&card=${Number.MAX_SAFE_INTEGER - 1}`);
+	assert.equal(page.saved().card, Number.MAX_SAFE_INTEGER - 1);
+	page.$('new').click();
+	assert.equal(page.saved().card, 1);
+});
+
 test('scores above 100 survive a reload unchanged', () => {
 	const page = boot({ 'telewave.v2': save([102, 101]) });
 	assert.deepEqual(page.saved().scores, [102, 101]);
