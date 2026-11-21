@@ -315,14 +315,17 @@ svg.dial.locked { cursor: default; }
 .win-screen[hidden] { display: none; }
 .win-text { margin: 0; font: 600 1.6rem var(--display); text-wrap: balance; }
 .win-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-/* 150px clear of the buttons (16px of grid gap plus the margin) on a wide window, 50px on a phone. The box keeps
-   its size whether or not an ad fills it; the link row sits 50px below the box. Ad-free browsers get neither. */
+/* 150px clear of the buttons (16px of grid gap plus the margin) on a wide, tall window, 50px on a phone, held either
+   way. The box keeps its size whether or not an ad fills it; the link row sits 50px below the box. Ad-free browsers get neither. */
 .win-ad { display: grid; justify-items: center; gap: 6px; margin-top: 134px; }
 .win-ad[hidden], :root.ad-free .win-ad { display: none; }
 .win-ad-label { margin: 0; font-size: .85rem; opacity: .75; }
 .win-ad-box { width: 300px; height: 250px; margin-bottom: 44px; }
 .win-ad-box[data-ad-size="320x100"] { width: 320px; height: 100px; }
 .win-ad-box[data-ad-size="320x50"] { width: 320px; height: 50px; }
+@media (max-height: 500px) {
+  .win-ad { margin-top: 34px; }
+}
 @media (max-width: 640px) {
   .win-ad { margin-top: 34px; }
   /* A 320px box is wider than the page minus its 16px gutters on a 320px phone. Giving it back the gutters as

@@ -316,9 +316,9 @@ test('an ad still on its way stays out of a box the window has become too small 
 const html = readFileSync(join(__dirname, '../index.html'), 'utf8');
 const css = readFileSync(join(__dirname, '../styles/styles.css'), 'utf8');
 
-test('the biggest size that fits the room below the box top is used, down to 320x50', () => {
+test('the biggest size that fits the room below the box top is used, down to 320x50, and none below that', () => {
 	const h = harness();
-	for (const [room, size] of [[800, '300x250'], [250, '300x250'], [249, '320x100'], [100, '320x100'], [99, '320x50'], [10, '320x50']]) {
+	for (const [room, size] of [[800, '300x250'], [250, '300x250'], [249, '320x100'], [100, '320x100'], [99, '320x50'], [50, '320x50'], [49, null], [10, null]]) {
 		assert.equal(h.ads.pickSize(room), size, `room ${room}`);
 	}
 });
@@ -369,6 +369,73 @@ test('a window that shrinks under an open result gets a smaller box and its own 
 	h.window.innerHeight = 100;
 	h.input('resize');
 	assert.equal(h.shown.length, 3); // a closed result asks for nothing
+});
+
+test('a window too short for the smallest box hides it and asks for no ad, even once the loader is in', async () => {
+	const h = harness({ innerHeight: 270 }); // 270 - 232 leaves 38px below the box top
+	h.results.show('Team 1 wins, 10 to 4!', 'seed/12');
+	assert.equal(h.els.winAd.hidden, true);
+	assert.equal(h.els.winAdBox.dataset.adSize, undefined);
+	assert.equal(h.els.winText.textContent, 'Team 1 wins, 10 to 4!');
+	h.added[0]?.listeners.load();
+	await settle();
+	assert.equal(h.shown.length, 0);
+});
+
+test('a result hidden for lack of room takes its first ad when the window grows, in a box that is showing', async () => {
+	const h = harness({ innerHeight: 270 });
+	h.results.show('Team 1 wins, 10 to 4!', 'seed/12');
+	h.input('resize'); // same size: still no room
+	assert.equal(h.els.winAd.hidden, true);
+	h.window.innerHeight = 300;
+	h.input('resize');
+	assert.equal(h.els.winAd.hidden, false);
+	assert.equal(h.els.winAdBox.dataset.adSize, '320x50');
+	h.added[0].listeners.load();
+	await settle();
+	assert.deepEqual(h.shown.map(([box, key]) => [box === h.els.winAdBox, key]), [[true, 'seed/12']]);
+	h.window.innerHeight = 600; // growing again keeps the size and the ad
+	h.input('resize');
+	assert.equal(h.els.winAdBox.dataset.adSize, '320x50');
+	assert.equal(h.shown.length, 1);
+});
+
+test('a window that shrinks under an open result until nothing fits hides the box and drops its ad', async () => {
+	const h = harness({ innerHeight: 640 });
+	h.results.show('Team 1 wins, 10 to 4!', 'seed/12');
+	h.added[0].listeners.load();
+	await settle();
+	const first = h.els.winAdBox;
+	h.window.innerHeight = 270;
+	h.input('resize');
+	assert.equal(h.els.winAd.hidden, true);
+	assert.equal(first.isConnected, false);
+	h.window.innerHeight = 640; // rotated back: a fresh box asks for its own ad under a new key
+	h.input('resize');
+	await settle();
+	assert.equal(h.els.winAd.hidden, false);
+	assert.equal(h.els.winAdBox.dataset.adSize, '300x250');
+	assert.deepEqual(h.shown.map(([, key]) => key), ['seed/12', 'seed/12/300x250']);
+	h.results.hide();
+	h.window.innerHeight = 270;
+	h.input('resize');
+	assert.equal(h.els.winAd.hidden, true);
+	assert.equal(h.shown.length, 2);
+});
+
+test('closing a result whose box was hidden for lack of room clears it, so the next one starts clean', () => {
+	const h = harness({ innerHeight: 270 });
+	h.results.show('Team 1 wins, 10 to 4!', 'seed/12');
+	h.results.hide();
+	h.window.innerHeight = 640;
+	h.input('resize'); // a closed result asks for nothing
+	assert.equal(h.els.winAd.hidden, true);
+	assert.equal(h.shown.length, 0);
+});
+
+test('the 50px gap before the results box applies to a short window as well as a narrow one', () => {
+	assert.match(css, /@media \(max-height: 500px\) \{\n  \.win-ad \{ margin-top: 34px; \}\n\}/, 'a landscape phone keeps the desktop gap of 134px and pushes the box off the first screen');
+	assert.match(css, /\.win-ad \{[^}]*margin-top: 134px;/);
 });
 
 test('on a phone the results box may spill into the page gutters, so a 320px box fits a 320px window', () => {
