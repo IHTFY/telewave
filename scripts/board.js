@@ -730,4 +730,25 @@ const playAd = (() => {
 	startRound();
 	// A reload between Guess and New card: the same card comes back already scored, and a win comes back as the results screen.
 	restoreScored(saved);
+	// Installed-app launch: the dial on the launch screen grows onto the game's dial while its needle swings upright
+	// to the 50% start and the launch screen fades away.
+	globalThis.launchExit?.(overlay => {
+		const dial = $('launch-dial'), box = dial.getBoundingClientRect(), k = box.width / 512;
+		const to = svg.getBoundingClientRect(), s = Math.min(to.width / 760, to.height / 420);
+		// The icon's dial is a half disk of radius 147 at (256, 351.8) in its 512 box; the game's is R at (CX, CY) in 760 x 420.
+		const dx = to.left + (to.width - 760 * s) / 2 + CX * s - (box.left + 256 * k);
+		const dy = to.top + (to.height - 420 * s) / 2 + CY * s - (box.top + 351.8 * k);
+		const grow = R * s / (147 * k);
+		const fill = { fill: 'forwards' };
+		return [
+			overlay.animate({ backgroundColor: ['#111b35', 'rgb(17 27 53 / 0)'] }, { duration: 700, easing: 'ease-in', ...fill }),
+			$('launch-name').animate({ opacity: [1, 0] }, { duration: 150, ...fill }),
+			$('launch-sky').animate({ opacity: [1, 0] }, { duration: 450, easing: 'ease-in', ...fill }),
+			dial.animate(
+				[{ transform: 'none', opacity: 1 }, { opacity: 1, offset: 0.75 }, { transform: `translate(${dx}px, ${dy}px) scale(${grow})`, opacity: 0 }],
+				{ duration: 900, easing: 'cubic-bezier(0.5, 0, 0.2, 1)', transformOrigin: `${256 * k}px ${351.8 * k}px`, ...fill }
+			),
+			$('launch-needle').animate({ transform: ['none', 'rotate(18deg)'] }, { duration: 700, easing: 'ease-in-out', ...fill })
+		];
+	});
 })();
