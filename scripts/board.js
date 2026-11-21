@@ -7,16 +7,19 @@
 // again as soon as play goes on. The results screen that holds it replaces the board, so the box, the result
 // and the buttons are in view together; it picks the biggest of three sizes that fits the window, and a window
 // that shrinks while the result is open moves it to a smaller size and a new ad, since the old one no longer fits.
+// Where not even the smallest fits above the bottom of the window (a phone held sideways, short), the box is hidden
+// and asks for no ad; the loader only checks that the box is in the page, so an ad is only asked for in a showing box.
 const winAd = (() => {
 	const LOADER = 'https://ihtfy.com/ads/v1.js';
 	// The sizes the box may take, biggest first, as [data-ad-size, width, height]: the first that fits the room
-	// between the box's top and the bottom of the window, and the width of the window.
+	// between the box's top and the bottom of the window, and the width of the window. A window narrower than all of
+	// them keeps the smallest, which spills into the page gutters; one too short for the smallest gets none (null).
 	const SIZES = [['300x250', 300, 250], ['320x100', 320, 100], ['320x50', 320, 50]];
-	const pickSize = (room, width = Infinity) => (SIZES.find(([, w, h]) => h <= room && w <= width) ?? SIZES.at(-1))[0];
+	const pickSize = (room, width = Infinity) => room < SIZES.at(-1)[2] ? null : (SIZES.find(([, w, h]) => h <= room && w <= width) ?? SIZES.at(-1))[0];
 	const $ = id => document.getElementById(id);
 	const fitSize = box => pickSize(window.innerHeight - box.getBoundingClientRect().top, document.documentElement.clientWidth);
 	let loader = null;
-	let open = null; // the size and key of the ad in the open result, or null
+	let open = null; // the open result: the size and key of its ad (size null while the window is too short for one), or null
 
 	const load = () => (loader ??= new Promise((resolve, reject) => {
 		const script = document.createElement('script');
@@ -43,11 +46,13 @@ const winAd = (() => {
 	function show(key) {
 		const aside = $('winAd');
 		if (!aside) return; // cached older HTML without the ad markup
-		aside.hidden = false;
+		aside.hidden = false; // the room is measured with the box showing
 		const box = $('winAdBox');
+		const size = fitSize(box);
+		open = { size, key, asked: !!size };
+		if (!size) { aside.hidden = true; return; }
 		// Sized before any ad comes, so nothing shifts when it fills; offline the empty box keeps that size too.
-		box.dataset.adSize = fitSize(box);
-		open = { size: box.dataset.adSize, key };
+		box.dataset.adSize = size;
 		if (!navigator.onLine) return;
 		const ready = load();
 		// hide() swaps the box out; a box removed while the loader was on its way gets no ad.
@@ -57,27 +62,34 @@ const winAd = (() => {
 	// Swaps in an empty box, so the next win gets its own ad instead of keeping this one.
 	function hide() {
 		const aside = $('winAd');
-		if (!aside || aside.hidden) return;
+		if (!aside || (aside.hidden && !open)) return;
 		aside.hidden = true;
 		open = null;
 		const box = $('winAdBox');
 		box.replaceWith(box.cloneNode(false));
 	}
 
-	// A window that shrinks under an open result takes the box to a size that fits. The ad already in it is the
-	// old size, and its key is spent, so the smaller box asks for its own ad. Growing keeps the smaller one.
+	// A window that shrinks under an open result takes the box to a size that fits, or hides it when none does. The ad
+	// already in it is the old size, and its key is spent, so the smaller box asks for its own ad. Growing keeps the
+	// smaller size, but a box hidden for lack of room takes its first ad when the window grows enough for one.
 	function fit() {
 		const aside = $('winAd');
-		if (!open || !aside || aside.hidden) return;
-		const size = fitSize($('winAdBox'));
-		const sizes = SIZES.map(([name]) => name);
-		if (sizes.indexOf(size) <= sizes.indexOf(open.size)) return;
+		if (!open || !aside) return;
 		const box = $('winAdBox');
+		aside.hidden = false; // the room is measured with the box showing
+		const size = fitSize(box);
+		if (!size) {
+			aside.hidden = true;
+			if (open.size) { box.replaceWith(box.cloneNode(false)); open = { size: null, key: open.key, asked: true }; }
+			return;
+		}
+		const rank = name => SIZES.findIndex(([listed]) => listed === name); // -1 for no size
+		if (rank(size) <= rank(open.size)) return;
 		const fresh = box.cloneNode(false);
 		box.replaceWith(fresh);
 		fresh.dataset.adSize = size;
-		const key = `${open.key}/${size}`;
-		open = { size, key };
+		const key = open.asked ? `${open.key}/${size}` : open.key;
+		open = { size, key, asked: true };
 		if (!navigator.onLine) return;
 		load().then(() => fresh.isConnected && window.ihtfyAds.show(fresh, key), () => {});
 	}
