@@ -125,6 +125,24 @@ test('a reload after a team won brings back the results screen', () => {
 	assert.deepEqual(page.saved().scores, [11, 10]);
 });
 
+test('a reload on the results screen shows it at once but asks for no ad until the first input', async () => {
+	for (const type of ['pointerdown', 'keydown']) {
+		const page = boot({ 'telewave.v2': save([11, 4], { scored: true }) }, '', { onLine: true });
+		assert.equal(page.$('winScreen').hidden, false);
+		assert.match(page.$('winText').textContent, /Team 1 wins, 11 to 4/);
+		assert.deepEqual(page.appended, []);
+		page.input(type);
+		await Promise.resolve();
+		assert.deepEqual(page.appended, ['https://ihtfy.com/ads/v1.js']);
+	}
+});
+
+test('a win played in the page asks for its ad at once', () => {
+	const page = boot({ 'telewave.v2': save([8, 9]) }, '', { onLine: true });
+	page.play(5, true); // 11 to 10
+	assert.deepEqual(page.appended, ['https://ihtfy.com/ads/v1.js']);
+});
+
 test('a reload after a tie, or a score under 10, shows no results screen', () => {
 	let page = boot({ 'telewave.v2': save([7, 10]) });
 	page.play(5, false); // 10 to 10
