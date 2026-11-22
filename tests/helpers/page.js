@@ -23,8 +23,10 @@ function stub(defaults = {}) {
 }
 
 // `store` is the fake localStorage contents; it keeps what the game saves, so booting again is a reload.
-function boot(store, search = '') {
+// `onLine` is whether the browser says it is online; `appended` lists the scripts the page adds to its head.
+function boot(store, search = '', { onLine = false } = {}) {
 	const els = new Map();
+	const appended = [];
 	// The dial maps a pointer straight to its own coordinates, and the cover and needle record what they are set to.
 	const special = {
 		dial: { createSVGPoint: () => ({ matrixTransform() { return { x: this.x, y: this.y }; } }), getScreenCTM: () => ({ inverse() {} }) },
@@ -34,7 +36,7 @@ function boot(store, search = '') {
 	const windowListeners = {};
 	const context = vm.createContext({
 		console, Math, JSON, URLSearchParams, Promise, String, Array, Object, Error, Date,
-		navigator: { onLine: false },
+		navigator: { onLine },
 		localStorage: { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = v; } },
 		location: { search, origin: 'https://example.test', pathname: '/' },
 		history: { replaceState() {} },
@@ -43,7 +45,7 @@ function boot(store, search = '') {
 		addEventListener: (type, fn) => { (windowListeners[type] ??= []).push(fn); }, innerWidth: 400,
 		ResizeObserver: class { observe() {} },
 		window: { innerHeight: 800, scrollTo() {} },
-		document: { getElementById: $, createElement: () => stub(), body: stub(), head: stub(), documentElement: stub({ clientWidth: 400 }), addEventListener() {}, cookie: '' }
+		document: { getElementById: $, createElement: () => stub(), body: stub(), head: { appendChild(el) { appended.push(el.src); return el; } }, documentElement: stub({ clientWidth: 400, classList: { contains: () => false, add() {}, remove() {}, toggle() {} }, style: { setProperty() {}, removeProperty() {} } }), addEventListener() {}, cookie: '' }
 	});
 	for (const f of ['scripts/random.js', 'scripts/data.js', 'scripts/board.js']) vm.runInContext(readFileSync(join(root, f), 'utf8'), context, { filename: f });
 	const seededRandom = vm.runInContext('seededRandom', context);
@@ -64,7 +66,9 @@ function boot(store, search = '') {
 	const heardSave = (newValue = store['telewave.v2']) => (windowListeners.storage || []).forEach(fn => fn({ key: 'telewave.v2', newValue }));
 	// A pointer at (x, y) in the dial's own coordinates; `onHandle` is whether it lands on the cover's handle.
 	const pointer = (type, x, y, onHandle = false) => $('dial').fire(type, { button: 0, clientX: x, clientY: y, pointerId: 1, target: { closest: sel => (onHandle && sel === '#handle' ? {} : null) } });
-	return { $, saved, play, heardSave, pointer, store };
+	// A first tap or key press anywhere on the page.
+	const input = type => (windowListeners[type] || []).forEach(fn => fn({}));
+	return { $, saved, play, heardSave, pointer, store, appended, input };
 }
 
 const save = (scores, extra = {}) => JSON.stringify({ scores, names: ['Team 1', 'Team 2'], turn: 0, pct: true, seed: 'apple', card: 1, ...extra });

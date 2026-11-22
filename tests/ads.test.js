@@ -137,6 +137,52 @@ test('a failed loader stays quiet and is tried again on the next win', async () 
 	assert.equal(h.added.length, 2);
 });
 
+test('a restored result shows its box at once but loads nothing until the first input', async () => {
+	for (const type of ['pointerdown', 'keydown']) {
+		const h = harness();
+		h.results.show('Team 1 wins, 11 to 4!', 'seed/12', true);
+		assert.equal(h.els.winScreen.hidden, false);
+		assert.equal(h.els.winAd.hidden, false);
+		assert.equal(h.els.winAdBox.dataset.adSize, '300x250');
+		await settle();
+		assert.equal(h.added.length, 0);
+		h.input(type);
+		await settle();
+		assert.equal(h.added.length, 1);
+		h.added[0].listeners.load();
+		await settle();
+		assert.deepEqual(h.shown, [[h.els.winAdBox, 'seed/12']]);
+	}
+});
+
+test('a restored result opened after an input, or replaced by a new win, asks at once', () => {
+	const afterInput = harness();
+	afterInput.input('pointerdown');
+	afterInput.ads.show('seed/12', true);
+	assert.equal(afterInput.added.length, 1);
+	const replaced = harness();
+	replaced.ads.show('seed/12', true);
+	replaced.ads.hide();
+	replaced.ads.show('seed/30');
+	assert.equal(replaced.added.length, 1);
+});
+
+test('a restored result that shrinks to a smaller box before any input still waits for its ad', async () => {
+	const h = harness({ innerHeight: 640 });
+	h.ads.show('seed/12', true);
+	h.window.innerHeight = 400;
+	h.input('resize');
+	await settle();
+	assert.equal(h.els.winAdBox.dataset.adSize, '320x100');
+	assert.equal(h.added.length, 0);
+	h.input('keydown');
+	await settle();
+	assert.equal(h.added.length, 1);
+	h.added[0].listeners.load();
+	await settle();
+	assert.deepEqual(h.shown, [[h.els.winAdBox, 'seed/12/320x100']]);
+});
+
 test('playing on hides the slot and swaps in an empty box, so the next win gets its own ad', async () => {
 	const h = harness();
 	const first = h.els.winAdBox;

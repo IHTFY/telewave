@@ -21,6 +21,15 @@ const winAd = (() => {
 	let loader = null;
 	let open = null; // the open result: the size and key of its ad (size null while the window is too short for one), or null
 
+	// A reload that restores the results screen shows it before any input, but its ad waits for the first tap or key
+	// press like everything else here. A win played in this page follows an input, so it asks at once.
+	let restored = false; // the open result came back from a save
+	let touched = false;
+	const firstInput = new Promise(resolve => {
+		for (const type of ['pointerdown', 'keydown']) addEventListener(type, () => { touched = true; resolve(); }, { once: true, capture: true });
+	});
+	const loadForAd = () => restored && !touched ? firstInput.then(load) : load();
+
 	const load = () => (loader ??= new Promise((resolve, reject) => {
 		const script = document.createElement('script');
 		script.async = true;
@@ -43,18 +52,19 @@ const winAd = (() => {
 	}
 
 	// Fills the box with an ad for the game over named `key`; offline or on failure it stays empty.
-	function show(key) {
+	function show(key, fromSave = false) {
 		const aside = $('winAd');
 		if (!aside) return; // cached older HTML without the ad markup
 		aside.hidden = false; // the room is measured with the box showing
 		const box = $('winAdBox');
 		const size = fitSize(box);
+		restored = fromSave;
 		open = { size, key, asked: !!size };
 		if (!size) { aside.hidden = true; return; }
 		// Sized before any ad comes, so nothing shifts when it fills; offline the empty box keeps that size too.
 		box.dataset.adSize = size;
 		if (!navigator.onLine) return;
-		const ready = load();
+		const ready = loadForAd();
 		// hide() swaps the box out; a box removed while the loader was on its way gets no ad.
 		ready.then(() => box.isConnected && window.ihtfyAds.show(box, key), () => {});
 	}
@@ -91,7 +101,7 @@ const winAd = (() => {
 		const key = open.asked ? `${open.key}/${size}` : open.key;
 		open = { size, key, asked: true };
 		if (!navigator.onLine) return;
-		load().then(() => fresh.isConnected && window.ihtfyAds.show(fresh, key), () => {});
+		loadForAd().then(() => fresh.isConnected && window.ihtfyAds.show(fresh, key), () => {});
 	}
 	addEventListener('resize', fit);
 	document.fonts?.ready.then(fit); // the fonts change how the text wraps, and so where the box starts
@@ -104,13 +114,13 @@ const winAd = (() => {
 const results = (() => {
 	const $ = id => document.getElementById(id);
 
-	function show(msg, key) {
+	function show(msg, key, fromSave) {
 		$('winText').textContent = msg;
 		$('winScreen').hidden = false;
 		$('winScreen').parentElement.classList.add('is-won');
 		// The player may have scrolled down to the Guess button; the box is placed and sized from the top of the page.
 		window.scrollTo(0, 0);
-		winAd.show(key);
+		winAd.show(key, fromSave);
 		$('playAgain').focus({ preventScroll: true });
 	}
 
@@ -490,9 +500,9 @@ const playAd = (() => {
 		return (a >= 10 || b >= 10) && a !== b ? `${game.names[a > b ? 0 : 1]} wins, ${Math.max(a, b)} to ${Math.min(a, b)}!` : null;
 	}
 
-	function showWin(msg) {
+	function showWin(msg, fromSave = false) {
 		showSeedBox(false);
-		results.show(msg, `${game.seed}/${game.card}`);
+		results.show(msg, `${game.seed}/${game.card}`, fromSave);
 	}
 
 	// Puts back what a save says about the card on the table: that it was scored, and the results screen if a team has won.
@@ -500,7 +510,7 @@ const playAd = (() => {
 		if (!(s.scored === true && s.seed === game.seed && s.card === game.card)) return;
 		Object.assign(round, { scored: true, extraTurn: s.extraTurn === true });
 		const won = winner();
-		if (won) showWin(won);
+		if (won) showWin(won, true);
 		save(); // startRound saved the card as unscored; write the restored flag back for the next reload
 	}
 
