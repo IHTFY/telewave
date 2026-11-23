@@ -283,6 +283,9 @@ const playAd = (() => {
 	$('face').setAttribute('d', halfDisk(R));
 	$('faceClipPath').setAttribute('d', halfDisk(R));
 	$('shade').setAttribute('d', halfDisk(R + 1));
+	// Widths measured from the folded-paper dial: the shadow is 0.13 of the radius, the highlight 0.085.
+	attrs($('creaseL'), { x: CX - 35, y: CY - R, width: 35, height: R });
+	attrs($('creaseR'), { x: CX, y: CY - R, width: 23, height: R });
 	attrs($('stopL'), { x: CX - R - 30, y: CY - 16, width: 40, height: 14 });
 	attrs($('handleBar'), { x: CX + R - 12, y: CY - 9, width: 96, height: 18 });
 	attrs($('handleHit'), { x: CX + R - 30, y: CY - 30, width: 130, height: 60 });
@@ -343,6 +346,7 @@ const playAd = (() => {
 	function drawShade() {
 		const t = `rotate(${-shade} ${CX} ${CY})`;
 		$('shade').setAttribute('transform', t);
+		$('shadeCrease').setAttribute('transform', t);
 		$('handle').setAttribute('transform', t);
 	}
 	function drawGem() {
@@ -375,7 +379,10 @@ const playAd = (() => {
 	}
 
 	// ---------- score tracks ----------
-	const HEAD = '<path d="M17 2C8 2 3 9 3 16c0 4 1 6 1 8l-3 5 4 1v4c0 3 2 4 5 4h3v4h14V29c4-3 6-8 6-13C33 8 27 2 17 2Z" fill="var(--team-color)" stroke="rgba(0,0,0,.25)" stroke-width="1.5"/>';
+	// Each team's peg has its own shape so the two tell apart without color: a round head for team 1, a square one for team 2,
+	// on the same neck and base.
+	const PEGS = ['M20 77.9A43.5 42.3 0 1 1 67 77.9V109H86V150H1V109H20Z', 'M20 78H12Q1 78 1 67V12Q1 1 12 1H75Q86 1 86 12V67Q86 78 75 78H67V109H86V150H1V109H20Z']
+		.map(d => `<path d="${d}" fill="var(--team-color)" stroke="rgba(0,0,0,.25)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`);
 	[0, 1].forEach(i => {
 		const el = $('track' + i);
 		el.style.setProperty('--team-color', `var(--team${i})`);
@@ -383,7 +390,7 @@ const playAd = (() => {
 		for (let n = 10; n >= 0; n--) slots += `<button type="button" class="slot" data-n="${n}" aria-label="Set team ${i + 1} score to ${n}"><span>${n}</span></button>`;
 		el.innerHTML =
 			`<input class="team-name" id="name${i}" maxlength="24" aria-label="Team ${i + 1} name">` +
-			`<div class="rail">${slots}<svg class="head" id="head${i}" viewBox="0 0 34 42" aria-hidden="true">${HEAD}</svg></div>` +
+			`<div class="rail">${slots}<svg class="head" id="head${i}" viewBox="0 0 87 150" aria-hidden="true">${PEGS[i]}</svg></div>` +
 			`<div class="bump"><button type="button" data-d="-1" aria-label="Team ${i + 1} minus one">&minus;</button><button type="button" data-d="1" aria-label="Team ${i + 1} plus one">+</button></div>`;
 		el.addEventListener('click', e => {
 			const b = e.target.closest('button');

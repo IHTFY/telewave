@@ -155,13 +155,18 @@
 								</pattern>
 								<clipPath id="upper"><rect x="0" y="0" width="760" height="330"/></clipPath>
 								<clipPath id="faceClip"><path id="faceClipPath"/></clipPath>
+								<!-- The fold down the middle of the paper face: a shadow on the left of the crease and a highlight on the right. -->
+								<linearGradient id="creaseShadow"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".1"/></linearGradient>
+								<linearGradient id="creaseLight"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+								<g id="crease" clip-path="url(#faceClip)"><rect id="creaseL" fill="url(#creaseShadow)"/><rect id="creaseR" fill="url(#creaseLight)"/></g>
 							</defs>
 							<g id="scallops"></g>
 							<path id="casing" class="navy"/>
 							<path id="casingSpeck" fill="url(#speck)"/>
 							<path id="face" class="face"/>
 							<g clip-path="url(#faceClip)"><g id="target"></g><g id="ticks"></g></g>
-							<g clip-path="url(#upper)"><path id="shade" class="shade"/></g>
+							<use href="#crease"/>
+							<g clip-path="url(#upper)"><path id="shade" class="shade"/><use id="shadeCrease" href="#crease"/></g>
 							<path id="panel" class="navy"/>
 							<path id="panelSpeck" fill="url(#speck)"/>
 							<rect id="stopL" class="mint" rx="7"/>
