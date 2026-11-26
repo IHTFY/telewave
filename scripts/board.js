@@ -759,7 +759,6 @@ const playAd = (() => {
 		const fill = { fill: 'forwards' };
 		return [
 			overlay.animate({ backgroundColor: ['#111b35', 'rgb(17 27 53 / 0)'] }, { duration: 700, easing: 'ease-in', ...fill }),
-			$('launch-name').animate({ opacity: [1, 0] }, { duration: 150, ...fill }),
 			$('launch-sky').animate({ opacity: [1, 0] }, { duration: 450, easing: 'ease-in', ...fill }),
 			dial.animate(
 				[{ transform: 'none', opacity: 1 }, { opacity: 1, offset: 0.75 }, { transform: `translate(${dx}px, ${dy}px) scale(${grow})`, opacity: 0 }],
