@@ -30,7 +30,6 @@
 			#launch { display: none; }
 			.launching #launch { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; background: #111b35; }
 			#launch svg { width: 128px; height: 128px; grid-area: 1 / 1; }
-			#launch-name { position: absolute; inset: auto 0 56px; font: 24px/1 Roboto, system-ui, sans-serif; text-align: center; color: rgb(255 255 255 / .87); }
 			#launch-needle { transform-box: fill-box; transform-origin: 100% 100%; }
 		</style>
 		<script>
@@ -105,7 +104,6 @@
 		<div id="launch" aria-hidden="true">
 			<svg id="launch-sky" viewBox="0 0 512 512"><defs><radialGradient id="launchSky" cx=".5" cy=".75" r=".9"><stop offset="0" stop-color="#1f3a78"/><stop offset="1" stop-color="#0c1329"/></radialGradient></defs><rect width="512" height="512" fill="url(#launchSky)"/><g transform="translate(41 41) scale(.84)"><path d="M100 88Q103.96 106.04 122 110Q103.96 113.96 100 132Q96.04 113.96 78 110Q96.04 106.04 100 88Z" fill="#fff" fill-opacity="1"/><path d="M420 60Q425.4 84.6 450 90Q425.4 95.4 420 120Q414.6 95.4 390 90Q414.6 84.6 420 60Z" fill="#fff" fill-opacity="0.95"/><path d="M440 186Q442.52 197.48 454 200Q442.52 202.52 440 214Q437.48 202.52 426 200Q437.48 197.48 440 186Z" fill="#fff" fill-opacity="0.8"/><path d="M70 218Q72.16 227.84 82 230Q72.16 232.16 70 242Q67.84 232.16 58 230Q67.84 227.84 70 218Z" fill="#fff" fill-opacity="0.7"/></g></svg>
 			<svg id="launch-dial" viewBox="0 0 512 512"><g transform="translate(41 41) scale(.84)"><path d="M81 370A175 175 0 0 1 431 370Z" fill="#ece8dc"/><path d="M256 370L104.4 282.5A175 175 0 0 1 153.1 228.4Z" fill="#f2a33a"/><path d="M256 370L153.1 228.4A175 175 0 0 1 219.6 198.8Z" fill="#e8603c"/><path d="M256 370L219.6 198.8A175 175 0 0 1 292.4 198.8Z" fill="#9ec4e4"/><path d="M256 370L292.4 198.8A175 175 0 0 1 358.9 228.4Z" fill="#e8603c"/><path d="M256 370L358.9 228.4A175 175 0 0 1 407.6 282.5Z" fill="#f2a33a"/><line id="launch-needle" x1="256" y1="370" x2="211.7" y2="233.5" stroke="#c8262f" stroke-width="16" stroke-linecap="round"/><circle cx="256" cy="370" r="38" fill="#c8262f"/><circle cx="256" cy="370" r="14" fill="#ece8dc"/></g></svg>
-			<span id="launch-name">Frequency</span>
 		</div>
 		<svg width="0" height="0" style="position:absolute" aria-hidden="true">
 			<defs>
