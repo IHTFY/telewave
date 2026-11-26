@@ -67,11 +67,17 @@
 						addEventListener('pointerdown', spare, true);
 						addEventListener('pointerup', lifted, true);
 					}
-					animations.forEach(a => a.finish());
+					skip();
 				};
 				const eat = event => {
 					event.preventDefault();
 					event.stopImmediatePropagation();
+				};
+				// A tap before the exit starts is remembered, and the exit then skips straight to its end.
+				let skipped = false;
+				const skip = () => {
+					skipped = true;
+					animations.forEach(a => a.finish());
 				};
 				let animations = [];
 				const end = () => {
@@ -81,6 +87,9 @@
 					root.classList.remove('launching');
 					document.getElementById('launch')?.remove();
 				};
+				// Armed with the launching state, so a press made while the page loads is covered too.
+				addEventListener('pointerdown', swallow, true);
+				addEventListener('keydown', swallow, true);
 				// The game never stays hidden behind the copy if it fails to call launchExit.
 				const fallback = setTimeout(end, 4000);
 				// play(overlay) starts the game's exit and returns its Web Animations.
@@ -92,8 +101,7 @@
 						try { animations = play(overlay); } catch { animations = []; }
 					}
 					if (!animations?.length) animations = [overlay.animate({ opacity: [1, 0] }, { duration: 200, easing: 'ease-out', fill: 'forwards' })];
-					addEventListener('pointerdown', swallow, true);
-					addEventListener('keydown', swallow, true);
+					if (skipped) skip();
 					Promise.all(animations.map(a => a.finished)).then(end, end);
 				};
 			})();
