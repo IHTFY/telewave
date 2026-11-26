@@ -43,12 +43,16 @@
 					sessionStorage.setItem('launched', '1');
 				} catch { return; }
 				root.classList.add('launching');
+				// Drops the click guard of the last press; a new press replaces it.
+				let disarm = () => {};
 				// While the copy shows, a tap or key only skips it: nothing behind it reacts.
 				const swallow = event => {
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					// A touch's click comes after the game takes input again, aimed at whatever is under the finger.
 					if (event.type === 'pointerdown' && event.isPrimary && event.button === 0) {
+						// The last press's timer must not later drop the guard this press arms.
+						disarm();
 						// A new press means the click that belonged to this one is not coming.
 						// The 1 s limit counts from the release, not the press, so a long hold stays covered.
 						let timer;
@@ -66,12 +70,19 @@
 						addEventListener('pointercancel', spare);
 						addEventListener('pointerdown', spare, true);
 						addEventListener('pointerup', lifted, true);
+						disarm = spare;
 					}
-					animations.forEach(a => a.finish());
+					skip();
 				};
 				const eat = event => {
 					event.preventDefault();
 					event.stopImmediatePropagation();
+				};
+				// A tap before the exit starts is remembered, and the exit then skips straight to its end.
+				let skipped = false;
+				const skip = () => {
+					skipped = true;
+					animations.forEach(a => a.finish());
 				};
 				let animations = [];
 				const end = () => {
@@ -81,6 +92,9 @@
 					root.classList.remove('launching');
 					document.getElementById('launch')?.remove();
 				};
+				// Armed with the launching state, so a press made while the page loads is covered too.
+				addEventListener('pointerdown', swallow, true);
+				addEventListener('keydown', swallow, true);
 				// The game never stays hidden behind the copy if it fails to call launchExit.
 				const fallback = setTimeout(end, 4000);
 				// play(overlay) starts the game's exit and returns its Web Animations.
@@ -92,8 +106,7 @@
 						try { animations = play(overlay); } catch { animations = []; }
 					}
 					if (!animations?.length) animations = [overlay.animate({ opacity: [1, 0] }, { duration: 200, easing: 'ease-out', fill: 'forwards' })];
-					addEventListener('pointerdown', swallow, true);
-					addEventListener('keydown', swallow, true);
+					if (skipped) skip();
 					Promise.all(animations.map(a => a.finished)).then(end, end);
 				};
 			})();
