@@ -43,12 +43,16 @@
 					sessionStorage.setItem('launched', '1');
 				} catch { return; }
 				root.classList.add('launching');
+				// Drops the click guard of the last press; a new press replaces it.
+				let disarm = () => {};
 				// While the copy shows, a tap or key only skips it: nothing behind it reacts.
 				const swallow = event => {
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					// A touch's click comes after the game takes input again, aimed at whatever is under the finger.
 					if (event.type === 'pointerdown' && event.isPrimary && event.button === 0) {
+						// The last press's timer must not later drop the guard this press arms.
+						disarm();
 						// A new press means the click that belonged to this one is not coming.
 						// The 1 s limit counts from the release, not the press, so a long hold stays covered.
 						let timer;
@@ -66,6 +70,7 @@
 						addEventListener('pointercancel', spare);
 						addEventListener('pointerdown', spare, true);
 						addEventListener('pointerup', lifted, true);
+						disarm = spare;
 					}
 					skip();
 				};
