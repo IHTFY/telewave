@@ -51,11 +51,22 @@
 					// A touch's click comes after the game takes input again, aimed at whatever is under the finger.
 					if (event.type === 'pointerdown' && event.isPrimary && event.button === 0) {
 						// A new press means the click that belonged to this one is not coming.
-						const spare = () => removeEventListener('click', eat, true);
+						// The 1 s limit counts from the release, not the press, so a long hold stays covered.
+						let timer;
+						const spare = () => {
+							clearTimeout(timer);
+							removeEventListener('click', eat, true);
+							removeEventListener('pointercancel', spare);
+							removeEventListener('pointerdown', spare, true);
+							removeEventListener('pointerup', lifted, true);
+						};
+						const lifted = up => {
+							if (up.pointerId === event.pointerId) timer = setTimeout(spare, 1000);
+						};
 						addEventListener('click', eat, { capture: true, once: true });
-						addEventListener('pointercancel', spare, { once: true });
-						addEventListener('pointerdown', spare, { capture: true, once: true });
-						setTimeout(spare, 1000);
+						addEventListener('pointercancel', spare);
+						addEventListener('pointerdown', spare, true);
+						addEventListener('pointerup', lifted, true);
 					}
 					animations.forEach(a => a.finish());
 				};
