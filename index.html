@@ -66,7 +66,7 @@
 						const lifted = up => {
 							if (up.pointerId === event.pointerId) timer = setTimeout(spare, 1000);
 						};
-						addEventListener('click', eat, { capture: true, once: true });
+						addEventListener('click', eat, true);
 						addEventListener('pointercancel', spare);
 						addEventListener('pointerdown', spare, true);
 						addEventListener('pointerup', lifted, true);
@@ -75,6 +75,9 @@
 					skip();
 				};
 				const eat = event => {
+					// A key or a screen reader clicks with no pointer behind it (detail 0): that is new input.
+					if (!event.detail) return;
+					removeEventListener('click', eat, true);
 					event.preventDefault();
 					event.stopImmediatePropagation();
 				};
