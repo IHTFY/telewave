@@ -45,7 +45,7 @@
 				root.classList.add('launching');
 				// Drops the click guard of the last press; a new press replaces it.
 				let disarm = () => {};
-				// While the copy shows, a tap or key only skips it: nothing behind it reacts.
+				// While the copy shows, a tap, key, or click only skips it: nothing behind it reacts.
 				const swallow = event => {
 					event.preventDefault();
 					event.stopImmediatePropagation();
@@ -92,12 +92,15 @@
 					clearTimeout(fallback);
 					removeEventListener('pointerdown', swallow, true);
 					removeEventListener('keydown', swallow, true);
+					removeEventListener('click', swallow, true);
 					root.classList.remove('launching');
 					document.getElementById('launch')?.remove();
 				};
 				// Armed with the launching state, so a press made while the page loads is covered too.
 				addEventListener('pointerdown', swallow, true);
 				addEventListener('keydown', swallow, true);
+				// A screen reader activates a control with a click alone.
+				addEventListener('click', swallow, true);
 				// The game never stays hidden behind the copy if it fails to call launchExit.
 				const fallback = setTimeout(end, 4000);
 				// play(overlay) starts the game's exit and returns its Web Animations.
